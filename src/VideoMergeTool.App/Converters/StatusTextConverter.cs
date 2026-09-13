@@ -1,6 +1,6 @@
 using System.Globalization;
 using System.Windows.Data;
-using VideoMergeTool.Core.Enums;
+using VideoMergeTool.Core.Features.MergeVideo.Enums;
 
 namespace VideoMergeTool.App.Converters;
 

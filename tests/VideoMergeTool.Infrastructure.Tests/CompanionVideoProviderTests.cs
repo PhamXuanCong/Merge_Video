@@ -1,4 +1,4 @@
-using VideoMergeTool.Infrastructure;
+using VideoMergeTool.Infrastructure.Features.MergeVideo;
 
 namespace VideoMergeTool.Infrastructure.Tests;
 

@@ -1,7 +1,7 @@
-using VideoMergeTool.Core.Enums;
-using VideoMergeTool.Core.Interfaces;
-using VideoMergeTool.Core.Models;
-using VideoMergeTool.Infrastructure;
+using VideoMergeTool.Core.Features.MergeVideo.Enums;
+using VideoMergeTool.Core.Features.MergeVideo.Interfaces;
+using VideoMergeTool.Core.Features.MergeVideo.Models;
+using VideoMergeTool.Infrastructure.Features.MergeVideo;
 
 namespace VideoMergeTool.Infrastructure.Tests;
 

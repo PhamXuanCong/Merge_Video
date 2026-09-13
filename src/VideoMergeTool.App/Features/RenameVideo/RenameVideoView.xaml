@@ -1,0 +1,206 @@
+<UserControl x:Class="VideoMergeTool.App.Features.RenameVideo.RenameVideoView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <Style x:Key="RenameStatusLabel" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource StatusPending}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="Pending">
+                    <Setter Property="Foreground" Value="{DynamicResource StatusRunning}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Renamed">
+                    <Setter Property="Foreground" Value="{DynamicResource StatusDone}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Failed">
+                    <Setter Property="Foreground" Value="{DynamicResource StatusFailed}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Folder -->
+        <Border Grid.Row="0" Style="{StaticResource SectionCard}">
+            <Grid IsEnabled="{Binding IsIdle}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.ColumnSpan="3" Style="{StaticResource FieldLabel}"
+                           Text="THƯ MỤC VIDEO  ·  chỉ xử lý file nằm trực tiếp trong thư mục, có thể kéo thả thư mục vào cửa sổ" />
+
+                <TextBox Grid.Row="1" Grid.Column="0" Margin="0,0,8,0"
+                         Style="{StaticResource RoundedTextBox}"
+                         Text="{Binding Folder, UpdateSourceTrigger=PropertyChanged}" />
+                <Button Grid.Row="1" Grid.Column="1" Margin="0,0,8,0"
+                        Style="{StaticResource BaseButton}"
+                        Click="SelectFolder_Click" Content="Chọn thư mục…" />
+                <Button Grid.Row="1" Grid.Column="2"
+                        Style="{StaticResource BaseButton}"
+                        Click="OpenFolder_Click"
+                        ToolTip="Mở thư mục trong Explorer (file lịch sử rename-log.csv nằm ở đây)"
+                        Content="Mở thư mục" />
+            </Grid>
+        </Border>
+
+        <!-- Hashtags -->
+        <Border Grid.Row="1" Margin="0,12,0,0" Style="{StaticResource SectionCard}">
+            <StackPanel IsEnabled="{Binding IsIdle}">
+                <TextBlock Style="{StaticResource FieldLabel}"
+                           Text="HASHTAG THÊM VÀO CUỐI TÊN  ·  cách nhau bằng dấu cách, ví dụ: #trending #fyp" />
+                <TextBox Style="{StaticResource RoundedTextBox}"
+                         ToolTip="Các ký tự không được dùng trong tên file (\ / : * ? &quot; &lt; &gt; |) sẽ tự bị loại bỏ"
+                         Text="{Binding HashtagText, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBlock Margin="0,6,0,0" FontSize="11" TextWrapping="Wrap"
+                           Foreground="{DynamicResource TextSecondary}">
+                    <Run Text="Tên mới = tên gốc bỏ phần [id] ở cuối + hashtag. Chỉ đổi tên các file:" />
+                    <Run Text="{Binding SupportedExtensionsText, Mode=OneTime}" />
+                </TextBlock>
+            </StackPanel>
+        </Border>
+
+        <!-- Actions -->
+        <Grid Grid.Row="2" Margin="0,14,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                <Button Style="{StaticResource BaseButton}" Command="{Binding ScanCommand}" Content="Xem trước" />
+                <Button Margin="8,0,0,0" Style="{StaticResource PrimaryButton}"
+                        Command="{Binding RenameCommand}" Content="Đổi tên hàng loạt" />
+                <Button Margin="8,0,0,0" Style="{StaticResource BaseButton}"
+                        ToolTip="Dừng thao tác đang chạy, hoặc bỏ danh sách xem trước mà không đổi tên file nào"
+                        Command="{Binding CancelCommand}" Content="Huỷ" />
+            </StackPanel>
+
+            <ProgressBar Grid.Column="1" Margin="20,0,20,0" Height="10"
+                         VerticalAlignment="Center"
+                         Style="{StaticResource FlatProgressBar}"
+                         Minimum="0" Maximum="1"
+                         Value="{Binding Progress}" />
+
+            <Button Grid.Column="2" Style="{StaticResource BaseButton}"
+                    ToolTip="Khôi phục tên gốc cho lần đổi tên gần nhất trong thư mục này, dựa vào rename-log.csv"
+                    Command="{Binding UndoCommand}" Content="Hoàn tác lần gần nhất" />
+        </Grid>
+
+        <!-- Preview / results -->
+        <Border Grid.Row="3" Margin="0,14,0,0" Style="{StaticResource SectionCard}" Padding="0"
+                ClipToBounds="True">
+            <Grid>
+                <ListView x:Name="ItemList"
+                          BorderThickness="0" Background="Transparent"
+                          ItemsSource="{Binding Items}"
+                          ItemContainerStyle="{StaticResource TaskRow}"
+                          SizeChanged="ItemList_SizeChanged"
+                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                          VirtualizingPanel.IsVirtualizing="True"
+                          VirtualizingPanel.VirtualizationMode="Recycling"
+                          VirtualizingPanel.ScrollUnit="Pixel">
+                    <ListView.View>
+                        <GridView ColumnHeaderContainerStyle="{StaticResource ColumnHeader}">
+                            <GridViewColumn x:Name="OriginalNameColumn" Width="320" Header="Tên cũ">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding OriginalName}"
+                                                   ToolTip="{Binding OriginalName}"
+                                                   TextTrimming="CharacterEllipsis" />
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+
+                            <GridViewColumn x:Name="NewNameColumn" Width="320" Header="Tên mới">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding NewName}"
+                                                   ToolTip="{Binding NewName}"
+                                                   TextTrimming="CharacterEllipsis" />
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+
+                            <GridViewColumn Width="95" Header="Trạng thái">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Style="{StaticResource RenameStatusLabel}"
+                                                   Text="{Binding StatusText}" />
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+
+                            <GridViewColumn x:Name="NoteColumn" Width="200" Header="Ghi chú">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Note}"
+                                                   ToolTip="{Binding Note}"
+                                                   Foreground="{DynamicResource TextSecondary}"
+                                                   TextTrimming="CharacterEllipsis" />
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+
+                <!-- Empty state -->
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                            Margin="24" IsHitTestVisible="False">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Items.Count}" Value="0">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+
+                    <Path Width="46" Height="38" Stretch="Uniform"
+                          HorizontalAlignment="Center"
+                          Stroke="{DynamicResource BorderBrushSoft}" StrokeThickness="1.5"
+                          StrokeLineJoin="Round"
+                          Data="M 2 6 L 2 26 L 30 26 L 30 10 L 15 10 L 12 6 Z" />
+                    <TextBlock Margin="0,14,0,0" HorizontalAlignment="Center"
+                               FontSize="14" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextSecondary}"
+                               Text="Chưa có danh sách xem trước" />
+                    <TextBlock Margin="0,6,0,0" HorizontalAlignment="Center"
+                               TextAlignment="Center" FontSize="12"
+                               Foreground="{DynamicResource TextSecondary}"
+                               Text="Kéo thả thư mục vào cửa sổ, hoặc chọn thư mục ở trên rồi bấm Xem trước." />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Footer -->
+        <StackPanel Grid.Row="4" Margin="2,12,2,0">
+            <TextBlock TextWrapping="Wrap" Text="{Binding SummaryText}" />
+            <TextBlock Margin="0,3,0,0" FontSize="11"
+                       Foreground="{DynamicResource TextSecondary}"
+                       Text="{Binding CountsText}" />
+        </StackPanel>
+    </Grid>
+</UserControl>

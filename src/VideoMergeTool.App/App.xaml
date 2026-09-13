@@ -1,7 +1,10 @@
 ﻿<Application x:Class="VideoMergeTool.App.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:converters="clr-namespace:VideoMergeTool.App.Converters">
+             xmlns:converters="clr-namespace:VideoMergeTool.App.Converters"
+             xmlns:mergeVideo="clr-namespace:VideoMergeTool.App.Features.MergeVideo"
+             xmlns:renameVideo="clr-namespace:VideoMergeTool.App.Features.RenameVideo"
+             xmlns:downloadVideo="clr-namespace:VideoMergeTool.App.Features.DownloadVideo">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -14,6 +17,22 @@
             </ResourceDictionary.MergedDictionaries>
 
             <converters:StatusTextConverter x:Key="StatusText" />
+
+            <!--
+                View-model-first navigation: the shell's ContentControl is bound to whichever
+                feature view model is active, and WPF picks the matching view via this template.
+            -->
+            <DataTemplate DataType="{x:Type mergeVideo:MergeVideoViewModel}">
+                <mergeVideo:MergeVideoView />
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type renameVideo:RenameVideoViewModel}">
+                <renameVideo:RenameVideoView />
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type downloadVideo:DownloadVideoViewModel}">
+                <downloadVideo:DownloadVideoView />
+            </DataTemplate>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

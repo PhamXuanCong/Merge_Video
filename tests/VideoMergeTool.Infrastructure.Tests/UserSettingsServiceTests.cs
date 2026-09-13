@@ -1,4 +1,5 @@
 using VideoMergeTool.Core.Enums;
+using VideoMergeTool.Core.Features.MergeVideo.Enums;
 using VideoMergeTool.Core.Models;
 using VideoMergeTool.Infrastructure;
 
@@ -40,7 +41,9 @@ public sealed class UserSettingsServiceTests : IDisposable
             VideoEncoder = VideoEncoder.NvidiaGpu,
             SourceFileAction = SourceFileAction.Keep,
             ExistingOutputAction = ExistingOutputAction.CreateUniqueName,
-            ThemePreference = ThemePreference.Dark
+            ThemePreference = ThemePreference.Dark,
+            RenameFolder = Path.Combine("D:", "downloads"),
+            RenameHashtags = "#trend #fyp"
         };
 
         service.Save(settings);

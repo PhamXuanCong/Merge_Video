@@ -1,4 +1,6 @@
 using VideoMergeTool.Core.Enums;
+using VideoMergeTool.Core.Features.DownloadVideo.Models;
+using VideoMergeTool.Core.Features.MergeVideo.Enums;
 
 namespace VideoMergeTool.Core.Models;
 
@@ -33,8 +35,19 @@ public sealed record UserSettings
     /// <summary>Most-recently-used input folders, newest first.</summary>
     public IReadOnlyList<string> RecentFolders { get; init; } = [];
 
-    // Record-synthesized equality would compare RecentFolders by reference, so two settings
-    // loaded from the same JSON would never be equal. Compare it by sequence instead.
+    /// <summary>Folder last used by the bulk video renamer.</summary>
+    public string RenameFolder { get; init; } = string.Empty;
+
+    /// <summary>Hashtags last appended by the bulk video renamer, as typed.</summary>
+    public string RenameHashtags { get; init; } = string.Empty;
+
+    /// <summary>One entry per YouTube downloader tab; empty until the downloader has been saved once.</summary>
+    public IReadOnlyList<DownloadTabSettings> DownloadTabs { get; init; } = [];
+
+    public int DownloadSelectedTabIndex { get; init; }
+
+    // Record-synthesized equality would compare the lists by reference, so two settings
+    // loaded from the same JSON would never be equal. Compare them by sequence instead.
     public bool Equals(UserSettings? other) =>
         other is not null &&
         InputFolder == other.InputFolder &&
@@ -46,7 +59,11 @@ public sealed record UserSettings
         SourceFileAction == other.SourceFileAction &&
         ExistingOutputAction == other.ExistingOutputAction &&
         ThemePreference == other.ThemePreference &&
-        RecentFolders.SequenceEqual(other.RecentFolders);
+        RenameFolder == other.RenameFolder &&
+        RenameHashtags == other.RenameHashtags &&
+        DownloadSelectedTabIndex == other.DownloadSelectedTabIndex &&
+        RecentFolders.SequenceEqual(other.RecentFolders) &&
+        DownloadTabs.SequenceEqual(other.DownloadTabs);
 
     public override int GetHashCode()
     {
@@ -60,9 +77,17 @@ public sealed record UserSettings
         hash.Add(SourceFileAction);
         hash.Add(ExistingOutputAction);
         hash.Add(ThemePreference);
+        hash.Add(RenameFolder);
+        hash.Add(RenameHashtags);
+        hash.Add(DownloadSelectedTabIndex);
         foreach (var folder in RecentFolders)
         {
             hash.Add(folder);
+        }
+
+        foreach (var tab in DownloadTabs)
+        {
+            hash.Add(tab);
         }
 
         return hash.ToHashCode();

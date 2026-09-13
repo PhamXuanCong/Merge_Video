@@ -1,0 +1,604 @@
+<UserControl x:Class="VideoMergeTool.App.Features.DownloadVideo.DownloadVideoView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:local="clr-namespace:VideoMergeTool.App.Features.DownloadVideo"
+             mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <Style x:Key="SectionLabel" TargetType="TextBlock" BasedOn="{StaticResource FieldLabel}">
+            <Setter Property="Margin" Value="0,14,0,5" />
+        </Style>
+
+        <Style x:Key="CompactButton" TargetType="Button" BasedOn="{StaticResource BaseButton}">
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="Padding" Value="12,6" />
+        </Style>
+
+        <Style x:Key="CompactPrimaryButton" TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="Padding" Value="14,8" />
+        </Style>
+
+        <Style x:Key="StatBlock" TargetType="StackPanel">
+            <Setter Property="Margin" Value="0,0,24,6" />
+            <Setter Property="MinWidth" Value="56" />
+        </Style>
+
+        <Style x:Key="StatValue" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="17" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <Style x:Key="TabHeaderItem" TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="12,6,6,6" />
+            <Setter Property="Margin" Value="0,0,6,0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Bg" CornerRadius="6" Padding="{TemplateBinding Padding}"
+                                Background="{DynamicResource SurfaceBackground}"
+                                BorderBrush="{DynamicResource BorderBrushSoft}" BorderThickness="1">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource RowHover}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource AccentSelected}" />
+                                <Setter TargetName="Bg" Property="BorderBrush" Value="{DynamicResource Accent}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="TabCloseButton" TargetType="Button">
+            <Setter Property="Width" Value="22" />
+            <Setter Property="Height" Value="22" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg" CornerRadius="4" Background="Transparent">
+                            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       FontSize="14" Text="×"
+                                       Foreground="{TemplateBinding Foreground}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource TrackBackground}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Colours come from triggers (not a converter) so switching theme repaints the rows. -->
+        <Style x:Key="DownloadStatusLabel" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource StatusPending}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="Downloading">
+                    <Setter Property="Foreground" Value="{DynamicResource StatusRunning}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Processing">
+                    <Setter Property="Foreground" Value="{DynamicResource StatusRunning}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Completed">
+                    <Setter Property="Foreground" Value="{DynamicResource StatusDone}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="AlreadyDownloaded">
+                    <Setter Property="Foreground" Value="{DynamicResource StatusSkipped}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Skipped">
+                    <Setter Property="Foreground" Value="{DynamicResource StatusSkipped}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Failed">
+                    <Setter Property="Foreground" Value="{DynamicResource StatusFailed}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Private">
+                    <Setter Property="Foreground" Value="{DynamicResource StatusFailed}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="RequiresLogin">
+                    <Setter Property="Foreground" Value="{DynamicResource StatusFailed}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Unavailable">
+                    <Setter Property="Foreground" Value="{DynamicResource StatusFailed}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Cancelled">
+                    <Setter Property="Foreground" Value="{DynamicResource StatusFailed}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <DataTemplate x:Key="TabContentTemplate" DataType="{x:Type local:DownloadTabViewModel}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="340" MinWidth="280" MaxWidth="560" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" MinWidth="360" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Options -->
+                    <Border Grid.Column="0" Style="{StaticResource SectionCard}" Padding="0">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                            <StackPanel Margin="14,0,14,14">
+                                <TextBlock Style="{StaticResource SectionLabel}" Text="URL KÊNH YOUTUBE" />
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Style="{StaticResource RoundedTextBox}"
+                                             ToolTip="Ví dụ: https://www.youtube.com/@ChannelHandle"
+                                             Text="{Binding ChannelUrl, UpdateSourceTrigger=PropertyChanged}" />
+                                    <Button Grid.Column="1" Margin="8,0,0,0" Style="{StaticResource CompactButton}"
+                                            Command="{Binding PasteUrlCommand}" Content="Dán URL" />
+                                </Grid>
+
+                                <TextBlock Style="{StaticResource SectionLabel}" Text="THƯ MỤC LƯU" />
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Style="{StaticResource RoundedTextBox}"
+                                             ToolTip="{Binding OutputDirectory}"
+                                             Text="{Binding OutputDirectory, UpdateSourceTrigger=PropertyChanged}" />
+                                    <Button Grid.Column="1" Margin="8,0,0,0" Style="{StaticResource CompactButton}"
+                                            Command="{Binding BrowseOutputDirectoryCommand}" Content="Chọn…" />
+                                </Grid>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="10" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Style="{StaticResource SectionLabel}" Text="CHẤT LƯỢNG" />
+                                        <ComboBox Style="{StaticResource OptionBox}" MinWidth="0"
+                                                  ItemsSource="{Binding QualityOptions}"
+                                                  DisplayMemberPath="Label" SelectedValuePath="Value"
+                                                  SelectedValue="{Binding SelectedQuality}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Style="{StaticResource SectionLabel}" Text="TRÌNH DUYỆT COOKIE" />
+                                        <ComboBox Style="{StaticResource OptionBox}" MinWidth="0"
+                                                  ToolTip="Chỉ dùng khi bật &quot;Dùng tài khoản trình duyệt&quot;"
+                                                  ItemsSource="{Binding BrowserOptions}"
+                                                  SelectedItem="{Binding SelectedBrowser}"
+                                                  IsEnabled="{Binding UseBrowserCookies}" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <TextBlock Style="{StaticResource SectionLabel}" Text="LOẠI NỘI DUNG" />
+                                <WrapPanel>
+                                    <CheckBox Style="{StaticResource OptionCheckBox}" Content="Video thường"
+                                              IsChecked="{Binding DownloadVideos}" />
+                                    <CheckBox Style="{StaticResource OptionCheckBox}" Content="Shorts"
+                                              IsChecked="{Binding DownloadShorts}" />
+                                    <CheckBox Style="{StaticResource OptionCheckBox}" Content="Livestream đã phát lại"
+                                              IsChecked="{Binding DownloadStreams}" />
+                                </WrapPanel>
+
+                                <TextBlock Style="{StaticResource SectionLabel}" Text="TÙY CHỌN TẢI" />
+                                <WrapPanel>
+                                    <CheckBox Style="{StaticResource OptionCheckBox}" Content="Thumbnail"
+                                              IsChecked="{Binding DownloadThumbnail}" />
+                                    <CheckBox Style="{StaticResource OptionCheckBox}" Content="Subtitle VI/EN"
+                                              IsChecked="{Binding DownloadSubtitles}" />
+                                    <CheckBox Style="{StaticResource OptionCheckBox}" Content="Bỏ qua video đã tải"
+                                              ToolTip="Dùng file archive.txt trong thư mục kênh để không tải lại video cũ"
+                                              IsChecked="{Binding SkipPreviouslyDownloaded}" />
+                                    <CheckBox Style="{StaticResource OptionCheckBox}" Content="Dùng tài khoản trình duyệt"
+                                              ToolTip="Chỉ bật khi bạn chủ động muốn yt-dlp đọc phiên đăng nhập hiện có. Cookie không được xuất hay ghi log."
+                                              IsChecked="{Binding UseBrowserCookies}" />
+                                </WrapPanel>
+
+                                <TextBlock Style="{StaticResource SectionLabel}" Text="BỘ LỌC" />
+                                <CheckBox Style="{StaticResource OptionCheckBox}" Content="Lọc theo thời lượng"
+                                          IsChecked="{Binding IsDurationFilterEnabled}" />
+                                <WrapPanel Margin="0,6,0,0">
+                                    <ComboBox Width="104" MinWidth="0" Margin="0,0,8,6" Style="{StaticResource OptionBox}"
+                                              ItemsSource="{Binding DurationComparisonOptions}"
+                                              DisplayMemberPath="Label" SelectedValuePath="Value"
+                                              SelectedValue="{Binding SelectedDurationComparison}"
+                                              IsEnabled="{Binding IsDurationFilterEnabled}" />
+                                    <TextBox Width="64" Margin="0,0,8,6" Style="{StaticResource RoundedTextBox}"
+                                             ToolTip="Giới hạn thời lượng"
+                                             Text="{Binding DurationLimitValue, UpdateSourceTrigger=LostFocus}"
+                                             IsEnabled="{Binding IsDurationFilterEnabled}" />
+                                    <ComboBox Width="84" MinWidth="0" Margin="0,0,0,6" Style="{StaticResource OptionBox}"
+                                              ItemsSource="{Binding DurationUnitOptions}"
+                                              DisplayMemberPath="Label" SelectedValuePath="Value"
+                                              SelectedValue="{Binding SelectedDurationUnit}"
+                                              IsEnabled="{Binding IsDurationFilterEnabled}" />
+                                </WrapPanel>
+                                <TextBlock FontSize="11" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}">
+                                    <Run Text="Đang ẩn" />
+                                    <Run FontWeight="SemiBold" Text="{Binding FilteredOutCount, Mode=OneWay}" />
+                                    <Run Text="video. Video chưa có thời lượng sẽ bị ẩn khi bật lọc." />
+                                </TextBlock>
+
+                                <Grid Margin="0,10,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock VerticalAlignment="Center" Margin="0,0,8,0" Text="Số video gần nhất" />
+                                    <TextBox Grid.Column="1" Width="70" Style="{StaticResource RoundedTextBox}"
+                                             Text="{Binding RecentVideoLimit, UpdateSourceTrigger=PropertyChanged, Delay=250}" />
+                                    <TextBlock Grid.Column="2" Margin="8,0,0,0" VerticalAlignment="Center" FontSize="11"
+                                               TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"
+                                               Text="0 = hiện tất cả" />
+                                </Grid>
+
+                                <WrapPanel Margin="0,18,0,0">
+                                    <Button Margin="0,0,8,8" Style="{StaticResource CompactPrimaryButton}"
+                                            Command="{Binding AnalyzeChannelCommand}" Content="Phân tích kênh" />
+                                    <Button Margin="0,0,8,8" Style="{StaticResource CompactPrimaryButton}"
+                                            Command="{Binding StartDownloadCommand}" Content="Bắt đầu tải" />
+                                    <Button Margin="0,0,8,8" Style="{StaticResource CompactButton}" Padding="14,8"
+                                            Command="{Binding CancelDownloadCommand}" Content="Hủy" />
+                                    <Button Margin="0,0,8,8" Style="{StaticResource CompactButton}" Padding="14,8"
+                                            Command="{Binding OpenOutputDirectoryCommand}" Content="Mở thư mục" />
+                                </WrapPanel>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Border>
+
+                    <GridSplitter Grid.Column="1" Width="12" HorizontalAlignment="Stretch"
+                                  Background="Transparent" ResizeDirection="Columns"
+                                  ResizeBehavior="PreviousAndNext" Cursor="SizeWE" />
+
+                    <Grid Grid.Column="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" MinHeight="120" />
+                            <RowDefinition Height="12" />
+                            <RowDefinition Height="130" MinHeight="60" />
+                        </Grid.RowDefinitions>
+
+                        <!-- Statistics and current download -->
+                        <Border Grid.Row="0" Style="{StaticResource SectionCard}" Padding="14,12,14,10">
+                            <StackPanel>
+                                <WrapPanel>
+                                    <StackPanel Style="{StaticResource StatBlock}" MaxWidth="220">
+                                        <TextBlock Style="{StaticResource FieldLabel}" Text="KÊNH" />
+                                        <TextBlock Style="{StaticResource StatValue}" TextTrimming="CharacterEllipsis"
+                                                   Text="{Binding ChannelName}" ToolTip="{Binding ChannelName}" />
+                                    </StackPanel>
+                                    <StackPanel Style="{StaticResource StatBlock}">
+                                        <TextBlock Style="{StaticResource FieldLabel}" Text="TỔNG" />
+                                        <TextBlock Style="{StaticResource StatValue}" Text="{Binding TotalVideoCount}" />
+                                    </StackPanel>
+                                    <StackPanel Style="{StaticResource StatBlock}">
+                                        <TextBlock Style="{StaticResource FieldLabel}" Text="HIỂN THỊ" />
+                                        <TextBlock Style="{StaticResource StatValue}" Foreground="{DynamicResource Accent}"
+                                                   Text="{Binding VisibleVideoCount}" />
+                                    </StackPanel>
+                                    <StackPanel Style="{StaticResource StatBlock}">
+                                        <TextBlock Style="{StaticResource FieldLabel}" Text="ĐÃ CHỌN" />
+                                        <TextBlock Style="{StaticResource StatValue}" Text="{Binding SelectedVideoCount}" />
+                                    </StackPanel>
+                                    <StackPanel Style="{StaticResource StatBlock}">
+                                        <TextBlock Style="{StaticResource FieldLabel}" Text="ĐANG CHỜ" />
+                                        <TextBlock Style="{StaticResource StatValue}" Text="{Binding PendingCount}" />
+                                    </StackPanel>
+                                    <StackPanel Style="{StaticResource StatBlock}">
+                                        <TextBlock Style="{StaticResource FieldLabel}" Text="HOÀN THÀNH" />
+                                        <TextBlock Style="{StaticResource StatValue}" Foreground="{DynamicResource StatusDone}"
+                                                   Text="{Binding CompletedCount}" />
+                                    </StackPanel>
+                                    <StackPanel Style="{StaticResource StatBlock}">
+                                        <TextBlock Style="{StaticResource FieldLabel}" Text="BỎ QUA" />
+                                        <TextBlock Style="{StaticResource StatValue}" Foreground="{DynamicResource StatusSkipped}"
+                                                   Text="{Binding SkippedCount}" />
+                                    </StackPanel>
+                                    <StackPanel Style="{StaticResource StatBlock}">
+                                        <TextBlock Style="{StaticResource FieldLabel}" Text="LỖI / HẠN CHẾ" />
+                                        <TextBlock Style="{StaticResource StatValue}" Foreground="{DynamicResource StatusFailed}"
+                                                   Text="{Binding FailedCount}" />
+                                    </StackPanel>
+                                </WrapPanel>
+
+                                <Grid Margin="0,4,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Margin="0,0,18,0">
+                                        <TextBlock TextTrimming="CharacterEllipsis" ToolTip="{Binding CurrentVideoTitle}">
+                                            <Run FontWeight="SemiBold" Text="Đang tải:" />
+                                            <Run Text="{Binding CurrentVideoTitle, Mode=OneWay}" />
+                                        </TextBlock>
+                                        <ProgressBar Height="8" Margin="0,6,0,0" Style="{StaticResource FlatProgressBar}"
+                                                     Minimum="0" Maximum="100" Value="{Binding CurrentProgressPercent, Mode=OneWay}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Margin="0,0,18,0" MinWidth="58">
+                                        <TextBlock Style="{StaticResource FieldLabel}" Text="TIẾN TRÌNH" />
+                                        <TextBlock FontWeight="SemiBold">
+                                            <Run Text="{Binding CurrentProgressPercent, Mode=OneWay, StringFormat={}{0:0.0}}" /><Run Text="%" />
+                                        </TextBlock>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" Margin="0,0,18,0" MinWidth="70">
+                                        <TextBlock Style="{StaticResource FieldLabel}" Text="TỐC ĐỘ" />
+                                        <TextBlock FontWeight="SemiBold" Text="{Binding CurrentSpeed}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="3" MinWidth="50">
+                                        <TextBlock Style="{StaticResource FieldLabel}" Text="ETA" />
+                                        <TextBlock FontWeight="SemiBold" Text="{Binding CurrentEta}" />
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Video list -->
+                        <Border Grid.Row="1" Margin="0,12,0,0" Style="{StaticResource SectionCard}" Padding="0"
+                                ClipToBounds="True">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="46" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <Grid Grid.Row="0" Margin="14,0,10,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock VerticalAlignment="Center" FontSize="14" FontWeight="SemiBold"
+                                               Text="Danh sách video" />
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Button Style="{StaticResource CompactButton}" Margin="0,0,8,0"
+                                                Command="{Binding SelectAllCommand}" Content="Chọn tất cả" />
+                                        <Button Style="{StaticResource CompactButton}"
+                                                Command="{Binding UnselectAllCommand}" Content="Bỏ chọn tất cả" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <ListView Grid.Row="1"
+                                          BorderThickness="0" Background="Transparent"
+                                          ItemsSource="{Binding FilteredVideoItems}"
+                                          ItemContainerStyle="{StaticResource TaskRow}"
+                                          ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                          VirtualizingPanel.IsVirtualizing="True"
+                                          VirtualizingPanel.VirtualizationMode="Recycling"
+                                          VirtualizingPanel.ScrollUnit="Pixel">
+                                    <ListView.View>
+                                        <GridView ColumnHeaderContainerStyle="{StaticResource ColumnHeader}">
+                                            <GridViewColumn Width="48" Header="Chọn">
+                                                <GridViewColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <CheckBox Style="{StaticResource OptionCheckBox}" Margin="4,0,0,0"
+                                                                  IsEnabled="{Binding CanSelect}"
+                                                                  IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                                    </DataTemplate>
+                                                </GridViewColumn.CellTemplate>
+                                            </GridViewColumn>
+                                            <GridViewColumn Width="96" Header="Ảnh">
+                                                <GridViewColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <Border Width="80" Height="45" CornerRadius="4" ClipToBounds="True"
+                                                                Background="{DynamicResource TrackBackground}">
+                                                            <Image Source="{Binding ThumbnailUrl, TargetNullValue={x:Null}}"
+                                                                   Stretch="UniformToFill" />
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </GridViewColumn.CellTemplate>
+                                            </GridViewColumn>
+                                            <GridViewColumn Width="280" Header="Tiêu đề">
+                                                <GridViewColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Text="{Binding Title}" ToolTip="{Binding Title}"
+                                                                   TextTrimming="CharacterEllipsis" />
+                                                    </DataTemplate>
+                                                </GridViewColumn.CellTemplate>
+                                            </GridViewColumn>
+                                            <GridViewColumn Width="84" Header="Loại" DisplayMemberBinding="{Binding ContentTypeDisplay}" />
+                                            <GridViewColumn Width="80" Header="Thời lượng" DisplayMemberBinding="{Binding DurationDisplay}" />
+                                            <GridViewColumn Width="92" Header="Ngày đăng" DisplayMemberBinding="{Binding UploadDateDisplay}" />
+                                            <GridViewColumn Width="140" Header="Tiến trình">
+                                                <GridViewColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <ProgressBar Height="8" Style="{StaticResource FlatProgressBar}"
+                                                                         Minimum="0" Maximum="100"
+                                                                         Value="{Binding ProgressPercent, Mode=OneWay}" />
+                                                            <TextBlock Grid.Column="1" Margin="8,0,0,0" MinWidth="38"
+                                                                       TextAlignment="Right" FontSize="11"
+                                                                       Foreground="{DynamicResource TextSecondary}">
+                                                                <Run Text="{Binding ProgressPercent, Mode=OneWay, StringFormat={}{0:0.0}}" /><Run Text="%" />
+                                                            </TextBlock>
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </GridViewColumn.CellTemplate>
+                                            </GridViewColumn>
+                                            <GridViewColumn Width="90" Header="Tốc độ" DisplayMemberBinding="{Binding Speed}" />
+                                            <GridViewColumn Width="64" Header="ETA" DisplayMemberBinding="{Binding Eta}" />
+                                            <GridViewColumn Width="120" Header="Trạng thái">
+                                                <GridViewColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Style="{StaticResource DownloadStatusLabel}"
+                                                                   Text="{Binding StatusDisplay}" />
+                                                    </DataTemplate>
+                                                </GridViewColumn.CellTemplate>
+                                            </GridViewColumn>
+                                            <GridViewColumn Width="110" Header="Video ID" DisplayMemberBinding="{Binding VideoId}" />
+                                            <GridViewColumn Width="260" Header="Thông báo lỗi">
+                                                <GridViewColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Text="{Binding ErrorMessage}" ToolTip="{Binding ErrorMessage}"
+                                                                   Foreground="{DynamicResource TextSecondary}"
+                                                                   TextTrimming="CharacterEllipsis" />
+                                                    </DataTemplate>
+                                                </GridViewColumn.CellTemplate>
+                                            </GridViewColumn>
+                                        </GridView>
+                                    </ListView.View>
+                                </ListView>
+
+                                <!-- Empty state -->
+                                <StackPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                            Margin="24" IsHitTestVisible="False">
+                                    <StackPanel.Style>
+                                        <Style TargetType="StackPanel">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding FilteredVideoItems.Count}" Value="0">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </StackPanel.Style>
+                                    <TextBlock HorizontalAlignment="Center" FontSize="14" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextSecondary}"
+                                               Text="Chưa có video trong danh sách" />
+                                    <TextBlock Margin="0,6,0,0" HorizontalAlignment="Center" TextAlignment="Center"
+                                               FontSize="12" Foreground="{DynamicResource TextSecondary}"
+                                               Text="Nhập URL kênh, chọn loại nội dung rồi bấm Phân tích kênh." />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <GridSplitter Grid.Row="2" Height="12" HorizontalAlignment="Stretch"
+                                      Background="Transparent" ResizeDirection="Rows"
+                                      ResizeBehavior="PreviousAndNext" Cursor="SizeNS" />
+
+                        <!-- Log -->
+                        <Border Grid.Row="3" Style="{StaticResource SectionCard}" Padding="0" ClipToBounds="True">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="38" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <Grid Grid.Row="0" Margin="14,0,10,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock VerticalAlignment="Center" FontWeight="SemiBold" Text="Nhật ký" />
+                                    <Button Grid.Column="1" VerticalAlignment="Center" Style="{StaticResource CompactButton}"
+                                            Padding="10,3" Command="{Binding ClearLogCommand}" Content="Xóa log hiển thị" />
+                                </Grid>
+                                <!-- A fixed console palette: readable the same way in both themes. -->
+                                <Border Grid.Row="1" Background="#101827" CornerRadius="0,0,7,7">
+                                    <ListBox BorderThickness="0" Background="Transparent" Padding="8,4"
+                                             ItemsSource="{Binding Logs}"
+                                             ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                             VirtualizingPanel.IsVirtualizing="True"
+                                             VirtualizingPanel.VirtualizationMode="Recycling">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock FontFamily="Consolas" FontSize="11" Foreground="#D9E2F2"
+                                                           Text="{Binding}" />
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                </Border>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Grid>
+
+                <!-- Footer -->
+                <Grid Grid.Row="1" Margin="2,10,2,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock VerticalAlignment="Center" ToolTip="{Binding DependencySummary}">
+                        <Run FontWeight="SemiBold" Text="Trạng thái:" />
+                        <Run Text="{Binding StatusText, Mode=OneWay}" />
+                    </TextBlock>
+                    <TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="11"
+                               Foreground="{DynamicResource TextSecondary}"
+                               Text="Chỉ tải nội dung bạn có quyền truy cập  ·  Cookie không được lưu" />
+                </Grid>
+            </Grid>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid Margin="18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Tabs -->
+        <Grid Grid.Row="0" Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <ListBox Grid.Column="0" VerticalAlignment="Center"
+                     Background="Transparent" BorderThickness="0"
+                     ItemsSource="{Binding Tabs}"
+                     SelectedItem="{Binding SelectedTab}"
+                     ItemContainerStyle="{StaticResource TabHeaderItem}"
+                     ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                     ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                <ListBox.ItemTemplate>
+                    <DataTemplate DataType="{x:Type local:DownloadTabViewModel}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock VerticalAlignment="Center" MaxWidth="200" TextTrimming="CharacterEllipsis"
+                                       Text="{Binding Title}" ToolTip="{Binding Title}" />
+                            <Button Margin="6,0,0,0" Style="{StaticResource TabCloseButton}"
+                                    ToolTip="Đóng chủ đề này"
+                                    Command="{Binding DataContext.CloseTabCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                    CommandParameter="{Binding}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <TextBox Grid.Column="1" Width="190" Margin="12,0,8,0" VerticalAlignment="Center"
+                     Style="{StaticResource RoundedTextBox}"
+                     ToolTip="Tên chủ đề của tab đang chọn — nhấn Enter để áp dụng"
+                     Text="{Binding SelectedTab.TitleInput, UpdateSourceTrigger=PropertyChanged}">
+                <TextBox.InputBindings>
+                    <KeyBinding Key="Enter" Command="{Binding SelectedTab.ConfirmTitleCommand}" />
+                </TextBox.InputBindings>
+            </TextBox>
+            <Button Grid.Column="2" Margin="0,0,8,0" VerticalAlignment="Center" Style="{StaticResource CompactButton}"
+                    Padding="12,8" Command="{Binding SelectedTab.ConfirmTitleCommand}" Content="Đổi tên" />
+            <Button Grid.Column="3" VerticalAlignment="Center" Style="{StaticResource CompactPrimaryButton}"
+                    Command="{Binding AddTabCommand}" Content="+ Thêm chủ đề" />
+        </Grid>
+
+        <ContentControl Grid.Row="1" Focusable="False"
+                        Content="{Binding SelectedTab}"
+                        ContentTemplate="{StaticResource TabContentTemplate}" />
+    </Grid>
+</UserControl>

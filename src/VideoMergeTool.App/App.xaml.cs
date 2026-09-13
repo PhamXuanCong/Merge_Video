@@ -1,12 +1,24 @@
+using System.Net.Http;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using VideoMergeTool.App.Services;
+using VideoMergeTool.App.Features.DownloadVideo;
+using VideoMergeTool.App.Features.DownloadVideo.Services;
+using VideoMergeTool.App.Features.MergeVideo;
+using VideoMergeTool.App.Features.MergeVideo.Services;
+using VideoMergeTool.App.Features.RenameVideo;
+using VideoMergeTool.App.Features.RenameVideo.Services;
+using VideoMergeTool.App.Shell;
 using VideoMergeTool.App.Theming;
-using VideoMergeTool.App.ViewModels;
+using VideoMergeTool.Core.Features.DownloadVideo.Interfaces;
+using VideoMergeTool.Core.Features.MergeVideo.Interfaces;
+using VideoMergeTool.Core.Features.RenameVideo.Interfaces;
 using VideoMergeTool.Core.Interfaces;
 using VideoMergeTool.Core.Models;
 using VideoMergeTool.Infrastructure;
+using VideoMergeTool.Infrastructure.Features.DownloadVideo;
+using VideoMergeTool.Infrastructure.Features.MergeVideo;
+using VideoMergeTool.Infrastructure.Features.RenameVideo;
 
 namespace VideoMergeTool.App;
 
@@ -17,7 +29,9 @@ public partial class App : Application
     public App()
     {
         _host = Host.CreateDefaultBuilder()
-            .ConfigureServices(services =>
+            // appsettings.json sits next to the exe, wherever the app was launched from.
+            .UseContentRoot(AppContext.BaseDirectory)
+            .ConfigureServices((context, services) =>
             {
                 services.AddSingleton(new ApplicationPaths(AppContext.BaseDirectory));
                 services.AddSingleton<ApplicationPathValidator>();
@@ -32,7 +46,25 @@ public partial class App : Application
                 services.AddSingleton<IUserSettingsService, UserSettingsService>();
                 services.AddSingleton<IUserPrompt, MessageBoxUserPrompt>();
                 services.AddSingleton<ThemeManager>();
-                services.AddSingleton<MainViewModel>();
+                services.AddSingleton<MergeVideoViewModel>();
+                services.AddSingleton<IRenameFolderScanner, RenameFolderScanner>();
+                services.AddSingleton<IVideoRenamer, VideoRenamer>();
+                services.AddSingleton<IRenamePrompt, MessageBoxRenamePrompt>();
+                services.AddSingleton<RenameVideoViewModel>();
+                services.AddSingleton<HttpClient>();
+                services.AddSingleton<IDownloadLogger, FileDownloadLogger>();
+                services.AddSingleton<IDownloadDependencyService, DownloadDependencyService>();
+                services.AddSingleton<IArchiveService, ArchiveService>();
+                services.AddSingleton<IVideoDurationCache, FileVideoDurationCache>();
+                services.AddSingleton<IVideoMetadataLogger, FileVideoMetadataLogger>();
+                services.AddSingleton<IYouTubeDataApiDurationResolver>(provider => new YouTubeDataApiDurationResolver(
+                    provider.GetRequiredService<HttpClient>(),
+                    context.Configuration["YouTubeDataApi:ApiKey"]));
+                services.AddSingleton<IChannelAnalyzer, YtDlpChannelAnalyzer>();
+                services.AddSingleton<IVideoDownloadService, YtDlpDownloadService>();
+                services.AddSingleton<IDownloadDialogService, DownloadDialogService>();
+                services.AddSingleton<DownloadVideoViewModel>();
+                services.AddSingleton<ShellViewModel>();
             })
             .Build();
     }
@@ -59,13 +91,10 @@ public partial class App : Application
         await _host.StartAsync();
 
         // Resolving the view model applies the saved theme, so do it before the window exists.
-        var viewModel = _host.Services.GetRequiredService<MainViewModel>();
-        var window = new MainWindow(
+        var viewModel = _host.Services.GetRequiredService<ShellViewModel>();
+        var window = new ShellWindow(
             _host.Services.GetRequiredService<ThemeManager>(),
-            _host.Services.GetRequiredService<IUserPrompt>())
-        {
-            DataContext = viewModel
-        };
+            viewModel);
 
         MainWindow = window;
         window.Show();
