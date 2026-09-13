@@ -1,0 +1,1 @@
+TODO: Add the third-party notices for every dependency distributed with this application before release.

@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/VideoMergeTool.App/VideoMergeTool.App.csproj" />
+    <Project Path="src/VideoMergeTool.Core/VideoMergeTool.Core.csproj" />
+    <Project Path="src/VideoMergeTool.Infrastructure/VideoMergeTool.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/VideoMergeTool.Core.Tests/VideoMergeTool.Core.Tests.csproj" />
+    <Project Path="tests/VideoMergeTool.Infrastructure.Tests/VideoMergeTool.Infrastructure.Tests.csproj" />
+  </Folder>
+</Solution>

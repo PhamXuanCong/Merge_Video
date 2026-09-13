@@ -1,0 +1,306 @@
+﻿<Window x:Class="VideoMergeTool.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Video Merge Tool"
+        Height="680" Width="1180" MinHeight="520" MinWidth="860"
+        Background="{DynamicResource WindowBackground}"
+        TextOptions.TextFormattingMode="Ideal"
+        UseLayoutRounding="True"
+        AllowDrop="True"
+        PreviewDragEnter="Window_PreviewDragOver"
+        PreviewDragOver="Window_PreviewDragOver"
+        PreviewDragLeave="Window_PreviewDragLeave"
+        PreviewDrop="Window_PreviewDrop">
+
+    <Grid>
+        <Grid Margin="18">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- Input folder -->
+            <Border Grid.Row="0" Style="{StaticResource SectionCard}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.ColumnSpan="5" Style="{StaticResource FieldLabel}"
+                               Text="INPUT FOLDER  ·  drag a folder anywhere onto this window" />
+
+                    <TextBox Grid.Row="1" Grid.Column="0" Margin="0,0,8,0"
+                             Style="{StaticResource RoundedTextBox}"
+                             Text="{Binding InputFolder, UpdateSourceTrigger=PropertyChanged}" />
+                    <ComboBox x:Name="RecentFoldersBox" Grid.Row="1" Grid.Column="1" Margin="0,0,8,0"
+                              Width="160"
+                              Style="{StaticResource OptionBox}"
+                              ToolTip="Switch to a recently used input folder"
+                              ItemsSource="{Binding RecentFolders}"
+                              SelectionChanged="RecentFoldersBox_SelectionChanged">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" ToolTip="{Binding}"
+                                           MaxWidth="320" TextTrimming="CharacterEllipsis" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <Button Grid.Row="1" Grid.Column="2" Margin="0,0,8,0"
+                            Style="{StaticResource BaseButton}"
+                            Click="SelectFolder_Click" Content="Browse…" />
+                    <Button Grid.Row="1" Grid.Column="3" Margin="0,0,8,0"
+                            Style="{StaticResource BaseButton}"
+                            Click="OpenOutputFolder_Click"
+                            ToolTip="Open the output folder in Explorer"
+                            Content="Open output" />
+                    <Button Grid.Row="1" Grid.Column="4" MinWidth="104"
+                            Style="{StaticResource BaseButton}"
+                            Command="{Binding CycleThemeCommand}"
+                            ToolTip="Switch between following Windows, always light, and always dark"
+                            Content="{Binding ThemeButtonText}" />
+                </Grid>
+            </Border>
+
+            <!-- Options -->
+            <Border Grid.Row="1" Margin="0,12,0,0" Style="{StaticResource SectionCard}">
+                <WrapPanel>
+                    <StackPanel Margin="0,0,18,0">
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="BỐ CỤC" />
+                        <ComboBox Style="{StaticResource OptionBox}" MinWidth="150"
+                                  ToolTip="Ghép video gốc và video đi kèm cạnh nhau hay trên dưới"
+                                  ItemsSource="{Binding MergeLayouts}"
+                                  DisplayMemberPath="Label" SelectedValuePath="Value"
+                                  SelectedValue="{Binding MergeLayout}" />
+                    </StackPanel>
+
+                    <StackPanel Margin="0,0,18,0">
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="TỐC ĐỘ NÉN" />
+                        <ComboBox Style="{StaticResource OptionBox}" MinWidth="175"
+                                  ToolTip="Càng nhanh thì xử lý càng lẹ nhưng file nặng hơn một chút"
+                                  ItemsSource="{Binding X264Presets}"
+                                  DisplayMemberPath="Label" SelectedValuePath="Value"
+                                  SelectedValue="{Binding X264Preset}" />
+                    </StackPanel>
+
+                    <StackPanel Margin="0,0,18,0">
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="BỘ MÃ HOÁ" />
+                        <ComboBox Style="{StaticResource OptionBox}" MinWidth="165"
+                                  ToolTip="CPU chạy được trên mọi máy. GPU NVIDIA (NVENC) nhanh và nhẹ CPU hơn nhiều, nhưng cần máy có card NVIDIA còn driver hỗ trợ — nếu không, video sẽ báo Failed, hãy đổi lại về CPU."
+                                  ItemsSource="{Binding VideoEncoders}"
+                                  DisplayMemberPath="Label" SelectedValuePath="Value"
+                                  SelectedValue="{Binding VideoEncoder}" />
+                    </StackPanel>
+
+                    <StackPanel Margin="0,0,18,0">
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="CHỌN VIDEO ĐI KÈM" />
+                        <ComboBox Style="{StaticResource OptionBox}" MinWidth="180"
+                                  ToolTip="Cách chọn video đi kèm cho mỗi video gốc"
+                                  ItemsSource="{Binding PairingModes}"
+                                  DisplayMemberPath="Label" SelectedValuePath="Value"
+                                  SelectedValue="{Binding PairingMode}" />
+                    </StackPanel>
+
+                    <StackPanel Margin="0,0,18,0">
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="SAU KHI GHÉP XONG" />
+                        <ComboBox Style="{StaticResource OptionBox}" MinWidth="205"
+                                  ToolTip="Xử lý video gốc thế nào sau khi video ghép đã được ghi và kiểm tra xong"
+                                  ItemsSource="{Binding SourceFileActions}"
+                                  DisplayMemberPath="Label" SelectedValuePath="Value"
+                                  SelectedValue="{Binding SourceFileAction}" />
+                    </StackPanel>
+
+                    <StackPanel Margin="0,0,18,0">
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="NẾU FILE ĐÃ TỒN TẠI" />
+                        <ComboBox Style="{StaticResource OptionBox}" MinWidth="140"
+                                  ToolTip="Làm gì khi trong thư mục output đã có file trùng tên"
+                                  ItemsSource="{Binding ExistingOutputActions}"
+                                  DisplayMemberPath="Label" SelectedValuePath="Value"
+                                  SelectedValue="{Binding ExistingOutputAction}" />
+                    </StackPanel>
+
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="SỐ LUỒNG CPU" />
+                        <ComboBox Style="{StaticResource OptionBox}" MinWidth="72"
+                                  ToolTip="Giới hạn số luồng CPU cho FFmpeg. Càng cao càng nhanh nhưng máy càng nặng"
+                                  ItemsSource="{Binding CpuThreadLimits}"
+                                  SelectedItem="{Binding CpuThreadLimit}" />
+                    </StackPanel>
+                </WrapPanel>
+            </Border>
+
+            <!-- Actions and overall progress -->
+            <Grid Grid.Row="2" Margin="0,14,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <Button Style="{StaticResource BaseButton}" Command="{Binding ScanCommand}" Content="Scan" />
+                    <Button Margin="8,0,0,0" Style="{StaticResource PrimaryButton}"
+                            Command="{Binding StartCommand}" Content="Start" />
+                    <Button Margin="8,0,0,0" Style="{StaticResource BaseButton}"
+                            Command="{Binding CancelCommand}" Content="Cancel" />
+                </StackPanel>
+
+                <ProgressBar Grid.Column="1" Margin="20,0,12,0" Height="10"
+                             VerticalAlignment="Center"
+                             Style="{StaticResource FlatProgressBar}"
+                             Minimum="0" Maximum="1"
+                             IsIndeterminate="{Binding IsScanning}"
+                             Value="{Binding OverallProgress}" />
+
+                <TextBlock Grid.Column="2" VerticalAlignment="Center" FontWeight="SemiBold" MinWidth="44"
+                           TextAlignment="Right"
+                           Text="{Binding OverallProgress, StringFormat={}{0:P0}}" />
+            </Grid>
+
+            <!-- Task list -->
+            <Border Grid.Row="3" Margin="0,14,0,0" Style="{StaticResource SectionCard}" Padding="0"
+                    ClipToBounds="True">
+                <Grid>
+                    <ListView x:Name="TaskList"
+                              BorderThickness="0" Background="Transparent"
+                              ItemsSource="{Binding Tasks}"
+                              ItemContainerStyle="{StaticResource TaskRow}"
+                              SizeChanged="TaskList_SizeChanged"
+                              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                              VirtualizingPanel.IsVirtualizing="True"
+                              VirtualizingPanel.VirtualizationMode="Recycling"
+                              VirtualizingPanel.ScrollUnit="Pixel">
+                        <ListView.View>
+                            <GridView ColumnHeaderContainerStyle="{StaticResource ColumnHeader}">
+                                <GridViewColumn x:Name="FileColumn" Width="380" Header="File">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding FileName}"
+                                                       ToolTip="{Binding InputFile}"
+                                                       TextTrimming="CharacterEllipsis" />
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+
+                                <GridViewColumn Width="95" Header="Status">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Style="{StaticResource StatusLabel}"
+                                                       Text="{Binding Status, Converter={StaticResource StatusText}}" />
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+
+                                <GridViewColumn Width="150" Header="Progress">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <ProgressBar Style="{StaticResource RowProgressBar}"
+                                                             Minimum="0" Maximum="1"
+                                                             Value="{Binding EffectiveProgress, Mode=OneWay}" />
+                                                <TextBlock Grid.Column="1" Margin="8,0,0,0" MinWidth="34"
+                                                           TextAlignment="Right" FontSize="11"
+                                                           Foreground="{DynamicResource TextSecondary}"
+                                                           Text="{Binding EffectiveProgress, Mode=OneWay, StringFormat={}{0:P0}}" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+
+                                <GridViewColumn x:Name="DetailsColumn" Width="300" Header="Details">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding ErrorMessage}"
+                                                       ToolTip="{Binding ErrorMessage}"
+                                                       Foreground="{DynamicResource TextSecondary}"
+                                                       TextTrimming="CharacterEllipsis" />
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+
+                    <!-- Empty state -->
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                                Margin="24" IsHitTestVisible="False">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Tasks.Count}" Value="0">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+
+                        <Path Width="46" Height="38" Stretch="Uniform"
+                              HorizontalAlignment="Center"
+                              Stroke="{DynamicResource BorderBrushSoft}" StrokeThickness="1.5"
+                              StrokeLineJoin="Round"
+                              Data="M 2 6 L 2 26 L 30 26 L 30 10 L 15 10 L 12 6 Z" />
+                        <TextBlock Margin="0,14,0,0" HorizontalAlignment="Center"
+                                   FontSize="14" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextSecondary}"
+                                   Text="No videos in the list yet" />
+                        <TextBlock Margin="0,6,0,0" HorizontalAlignment="Center"
+                                   TextAlignment="Center" FontSize="12"
+                                   Foreground="{DynamicResource TextSecondary}"
+                                   Text="Drag a folder onto this window, or pick one above and press Scan." />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Footer -->
+            <Grid Grid.Row="4" Margin="2,12,2,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
+                    <TextBlock TextWrapping="Wrap" Text="{Binding SummaryText}" />
+                    <TextBlock Margin="0,3,0,0" FontSize="11"
+                               Foreground="{DynamicResource TextSecondary}"
+                               Text="{Binding CountsText}" />
+                </StackPanel>
+                <TextBlock Grid.Column="1" VerticalAlignment="Bottom" FontSize="11"
+                           Foreground="{DynamicResource TextSecondary}"
+                           Text="{Binding ElapsedText}" />
+            </Grid>
+        </Grid>
+
+        <!-- Drop target overlay -->
+        <Border x:Name="DropOverlay" Visibility="Collapsed"
+                Margin="10" CornerRadius="10"
+                Background="{DynamicResource DropOverlayBackground}"
+                BorderBrush="{DynamicResource Accent}" BorderThickness="2"
+                IsHitTestVisible="False">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock HorizontalAlignment="Center" FontSize="18" FontWeight="SemiBold"
+                           Foreground="{DynamicResource Accent}"
+                           Text="Drop the folder to scan it" />
+                <TextBlock Margin="0,6,0,0" HorizontalAlignment="Center" FontSize="12"
+                           Foreground="{DynamicResource TextSecondary}"
+                           Text="Dropping a file uses the folder that contains it." />
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

@@ -1,0 +1,42 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VideoMergeTool.App", "src\VideoMergeTool.App\VideoMergeTool.App.csproj", "{B6A5610C-3C7C-4C36-9709-84A316B65C2A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VideoMergeTool.Core", "src\VideoMergeTool.Core\VideoMergeTool.Core.csproj", "{844A493E-43AA-4248-AD47-92E9C3A451B0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VideoMergeTool.Infrastructure", "src\VideoMergeTool.Infrastructure\VideoMergeTool.Infrastructure.csproj", "{2B6607EA-4C89-463B-81AE-710EEFDDAF06}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VideoMergeTool.Core.Tests", "tests\VideoMergeTool.Core.Tests\VideoMergeTool.Core.Tests.csproj", "{4D682873-263B-4A6C-967A-0B5E91B88B1C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VideoMergeTool.Infrastructure.Tests", "tests\VideoMergeTool.Infrastructure.Tests\VideoMergeTool.Infrastructure.Tests.csproj", "{D62CED0B-CC1C-486C-883E-4D4E79D88B8C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B6A5610C-3C7C-4C36-9709-84A316B65C2A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B6A5610C-3C7C-4C36-9709-84A316B65C2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B6A5610C-3C7C-4C36-9709-84A316B65C2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B6A5610C-3C7C-4C36-9709-84A316B65C2A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{844A493E-43AA-4248-AD47-92E9C3A451B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{844A493E-43AA-4248-AD47-92E9C3A451B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{844A493E-43AA-4248-AD47-92E9C3A451B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{844A493E-43AA-4248-AD47-92E9C3A451B0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2B6607EA-4C89-463B-81AE-710EEFDDAF06}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B6607EA-4C89-463B-81AE-710EEFDDAF06}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B6607EA-4C89-463B-81AE-710EEFDDAF06}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B6607EA-4C89-463B-81AE-710EEFDDAF06}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4D682873-263B-4A6C-967A-0B5E91B88B1C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4D682873-263B-4A6C-967A-0B5E91B88B1C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4D682873-263B-4A6C-967A-0B5E91B88B1C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4D682873-263B-4A6C-967A-0B5E91B88B1C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D62CED0B-CC1C-486C-883E-4D4E79D88B8C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D62CED0B-CC1C-486C-883E-4D4E79D88B8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D62CED0B-CC1C-486C-883E-4D4E79D88B8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D62CED0B-CC1C-486C-883E-4D4E79D88B8C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

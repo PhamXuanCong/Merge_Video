@@ -1,0 +1,32 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Palette keys must match Light.xaml exactly: the two dictionaries are swapped at runtime. -->
+
+    <SolidColorBrush x:Key="WindowBackground" Color="#16181D" />
+    <SolidColorBrush x:Key="SurfaceBackground" Color="#1E2127" />
+    <SolidColorBrush x:Key="BorderBrushSoft" Color="#313640" />
+    <SolidColorBrush x:Key="TextPrimary" Color="#E6E8EB" />
+    <SolidColorBrush x:Key="TextSecondary" Color="#9BA3AF" />
+
+    <SolidColorBrush x:Key="Accent" Color="#3B82F6" />
+    <SolidColorBrush x:Key="AccentForeground" Color="#0B1220" />
+    <SolidColorBrush x:Key="AccentSoft" Color="#1E293B" />
+    <SolidColorBrush x:Key="AccentSelected" Color="#23334D" />
+
+    <SolidColorBrush x:Key="RowHover" Color="#23262D" />
+    <SolidColorBrush x:Key="TrackBackground" Color="#2A2E36" />
+
+    <SolidColorBrush x:Key="ScrollThumb" Color="#3A404B" />
+    <SolidColorBrush x:Key="ScrollThumbHover" Color="#4B5461" />
+    <SolidColorBrush x:Key="ScrollThumbActive" Color="#5C6675" />
+
+    <SolidColorBrush x:Key="StatusPending" Color="#9BA3AF" />
+    <SolidColorBrush x:Key="StatusRunning" Color="#60A5FA" />
+    <SolidColorBrush x:Key="StatusDone" Color="#4ADE80" />
+    <SolidColorBrush x:Key="StatusSkipped" Color="#FBBF24" />
+    <SolidColorBrush x:Key="StatusFailed" Color="#F87171" />
+
+    <SolidColorBrush x:Key="DropOverlayBackground" Color="#F21E293B" />
+
+</ResourceDictionary>

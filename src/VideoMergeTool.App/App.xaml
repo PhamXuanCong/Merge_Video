@@ -1,0 +1,19 @@
+﻿<Application x:Class="VideoMergeTool.App.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:VideoMergeTool.App.Converters">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!--
+                    Index 0 is the palette and ThemeManager replaces it at runtime, so it must
+                    stay first. Controls.xaml reads every colour through DynamicResource.
+                -->
+                <ResourceDictionary Source="Themes/Light.xaml" />
+                <ResourceDictionary Source="Themes/Controls.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <converters:StatusTextConverter x:Key="StatusText" />
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
