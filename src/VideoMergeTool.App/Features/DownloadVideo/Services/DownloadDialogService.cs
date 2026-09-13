@@ -23,6 +23,34 @@ public sealed class DownloadDialogService : IDownloadDialogService
         return dialog.ShowDialog() == true ? dialog.FolderName : null;
     }
 
+    public string? SelectFile(string? initialFilePath, string filter, string title)
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = title,
+            Filter = filter,
+            Multiselect = false,
+            CheckFileExists = true
+        };
+
+        if (!string.IsNullOrWhiteSpace(initialFilePath))
+        {
+            var directory = Path.GetDirectoryName(initialFilePath);
+            if (!string.IsNullOrWhiteSpace(directory) && Directory.Exists(directory))
+            {
+                dialog.InitialDirectory = directory;
+            }
+
+            var fileName = Path.GetFileName(initialFilePath);
+            if (!string.IsNullOrWhiteSpace(fileName))
+            {
+                dialog.FileName = fileName;
+            }
+        }
+
+        return dialog.ShowDialog() == true ? dialog.FileName : null;
+    }
+
     public string? GetClipboardText() =>
         Clipboard.ContainsText(TextDataFormat.UnicodeText)
             ? Clipboard.GetText(TextDataFormat.UnicodeText)

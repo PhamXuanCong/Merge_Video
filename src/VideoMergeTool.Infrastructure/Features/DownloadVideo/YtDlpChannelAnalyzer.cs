@@ -72,6 +72,8 @@ public sealed class YtDlpChannelAnalyzer : IChannelAnalyzer
         bool resolveMissingDurations,
         bool useBrowserCookies,
         string browserName,
+        bool useCookieFile,
+        string cookieFilePath,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(channelBaseUri);
@@ -97,6 +99,8 @@ public sealed class YtDlpChannelAnalyzer : IChannelAnalyzer
                 normalizedVideoLimit,
                 useBrowserCookies,
                 browserName,
+                useCookieFile,
+                cookieFilePath,
                 cancellationToken).ConfigureAwait(false);
 
             channelName = FirstNonEmpty(
@@ -152,6 +156,8 @@ public sealed class YtDlpChannelAnalyzer : IChannelAnalyzer
                 selectedCandidates.Select(static candidate => candidate.Entry),
                 useBrowserCookies,
                 browserName,
+                useCookieFile,
+                cookieFilePath,
                 cancellationToken).ConfigureAwait(false);
         }
 
@@ -171,6 +177,8 @@ public sealed class YtDlpChannelAnalyzer : IChannelAnalyzer
         int maximumEntries,
         bool useBrowserCookies,
         string browserName,
+        bool useCookieFile,
+        string cookieFilePath,
         CancellationToken cancellationToken)
     {
         var output = new StringBuilder();
@@ -191,11 +199,7 @@ public sealed class YtDlpChannelAnalyzer : IChannelAnalyzer
             arguments.Add(maximumEntries.ToString(CultureInfo.InvariantCulture));
         }
 
-        if (useBrowserCookies)
-        {
-            arguments.Add("--cookies-from-browser");
-            arguments.Add(NormalizeBrowser(browserName));
-        }
+        CookieArgumentHelper.Add(arguments, useBrowserCookies, browserName, useCookieFile, cookieFilePath);
 
         arguments.Add(tabUri.AbsoluteUri);
         ProcessHelper.AddArguments(startInfo, arguments);
@@ -271,6 +275,8 @@ public sealed class YtDlpChannelAnalyzer : IChannelAnalyzer
         IEnumerable<PlaylistEntryDto> entries,
         bool useBrowserCookies,
         string browserName,
+        bool useCookieFile,
+        string cookieFilePath,
         CancellationToken cancellationToken)
     {
         var entriesMissingDuration = entries
@@ -311,17 +317,19 @@ public sealed class YtDlpChannelAnalyzer : IChannelAnalyzer
         }
 
         // Without cookies every per-video lookup would fail or crawl, so none is attempted.
-        if (!useBrowserCookies)
+        var hasCookieFile = useCookieFile && !string.IsNullOrWhiteSpace(cookieFilePath);
+        if (!useBrowserCookies && !hasCookieFile)
         {
             _logger.Warning(
-                $"Duration metadata is missing for {entriesToResolve.Length} videos, but browser cookies are disabled. " +
-                "Enable browser cookies and analyze again to resolve them.");
+                $"Duration metadata is missing for {entriesToResolve.Length} videos, but no cookies are configured. " +
+                "Enable browser cookies or a cookie file and analyze again to resolve them.");
             return;
         }
 
+        var cookieDescription = hasCookieFile ? "the cookie file" : $"{NormalizeBrowser(browserName)} browser cookies";
         _logger.Info(
             $"Resolving missing duration metadata sequentially for {entriesToResolve.Length} videos " +
-            $"using {NormalizeBrowser(browserName)} browser cookies.");
+            $"using {cookieDescription}.");
 
         var resolvedCount = cacheHitCount;
         for (var index = 0; index < entriesToResolve.Length; index++)
@@ -338,10 +346,15 @@ public sealed class YtDlpChannelAnalyzer : IChannelAnalyzer
 
             var entry = entriesToResolve[index];
             _logger.Info(
-                $"Resolving duration ({index + 1}/{entriesToResolve.Length}) using " +
-                $"{NormalizeBrowser(browserName)} browser cookies.",
+                $"Resolving duration ({index + 1}/{entriesToResolve.Length}) using {cookieDescription}.",
                 entry.Id);
-            var lookup = await ResolveDurationAsync(entry, browserName, cancellationToken).ConfigureAwait(false);
+            var lookup = await ResolveDurationAsync(
+                entry,
+                useBrowserCookies,
+                browserName,
+                useCookieFile,
+                cookieFilePath,
+                cancellationToken).ConfigureAwait(false);
 
             if (lookup.Duration is not null)
             {
@@ -461,28 +474,30 @@ public sealed class YtDlpChannelAnalyzer : IChannelAnalyzer
 
     private async Task<DurationLookupResult> ResolveDurationAsync(
         PlaylistEntryDto entry,
+        bool useBrowserCookies,
         string browserName,
+        bool useCookieFile,
+        string cookieFilePath,
         CancellationToken cancellationToken)
     {
         double? resolvedDuration = null;
         var authenticationRequired = false;
         var startInfo = ProcessHelper.CreateStartInfo(_dependencyService.YtDlpPath);
-        ProcessHelper.AddArguments(
-            startInfo,
-            [
-                "--skip-download",
-                "--no-playlist",
-                "--ignore-errors",
-                "--no-progress",
-                "--no-warnings",
-                "--encoding",
-                "utf-8",
-                "--print",
-                YtDlpDurationParser.OutputTemplate,
-                "--cookies-from-browser",
-                NormalizeBrowser(browserName),
-                $"https://www.youtube.com/watch?v={Uri.EscapeDataString(entry.Id!)}"
-            ]);
+        var arguments = new List<string>
+        {
+            "--skip-download",
+            "--no-playlist",
+            "--ignore-errors",
+            "--no-progress",
+            "--no-warnings",
+            "--encoding",
+            "utf-8",
+            "--print",
+            YtDlpDurationParser.OutputTemplate
+        };
+        CookieArgumentHelper.Add(arguments, useBrowserCookies, browserName, useCookieFile, cookieFilePath);
+        arguments.Add($"https://www.youtube.com/watch?v={Uri.EscapeDataString(entry.Id!)}");
+        ProcessHelper.AddArguments(startInfo, arguments);
 
         try
         {

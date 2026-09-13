@@ -262,11 +262,12 @@ public sealed class YtDlpDownloadService : IVideoDownloadService, IDisposable
             arguments.Add("vi.*,en.*");
         }
 
-        if (options.UseBrowserCookies)
-        {
-            arguments.Add("--cookies-from-browser");
-            arguments.Add(YtDlpChannelAnalyzer.NormalizeBrowser(options.BrowserName));
-        }
+        CookieArgumentHelper.Add(
+            arguments,
+            options.UseBrowserCookies,
+            options.BrowserName,
+            options.UseCookieFile,
+            options.CookieFilePath);
 
         arguments.Add(item.Url);
         ProcessHelper.AddArguments(startInfo, arguments);

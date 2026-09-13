@@ -110,6 +110,8 @@ public sealed class YtDlpChannelAnalyzerTests
             resolveMissingDurations: false,
             useBrowserCookies: false,
             browserName: "chrome",
+            useCookieFile: false,
+            cookieFilePath: string.Empty,
             CancellationToken.None);
 
         string[] expected = ["limited-3", "limited-2"];
@@ -138,6 +140,8 @@ public sealed class YtDlpChannelAnalyzerTests
             resolveMissingDurations: false,
             useBrowserCookies: false,
             browserName: "chrome",
+            useCookieFile: false,
+            cookieFilePath: string.Empty,
             CancellationToken.None);
 
         Assert.Equal("Uploader Name", result.ChannelName);
@@ -200,6 +204,8 @@ public sealed class YtDlpChannelAnalyzerTests
             resolveMissingDurations,
             useBrowserCookies,
             browserName: "Chrome",
+            useCookieFile: false,
+            cookieFilePath: string.Empty,
             CancellationToken.None);
 
     /// <summary>The same canned channels the original LogicChecks fake yt-dlp served.</summary>

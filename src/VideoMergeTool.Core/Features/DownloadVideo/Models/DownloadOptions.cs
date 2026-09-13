@@ -19,4 +19,8 @@ public sealed class DownloadOptions
     public bool UseBrowserCookies { get; init; }
 
     public string BrowserName { get; init; } = "chrome";
+
+    public bool UseCookieFile { get; init; }
+
+    public string CookieFilePath { get; init; } = string.Empty;
 }

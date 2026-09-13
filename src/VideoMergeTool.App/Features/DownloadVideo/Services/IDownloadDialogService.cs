@@ -10,6 +10,9 @@ public interface IDownloadDialogService
     /// <returns>The chosen folder, or <c>null</c> if the user cancelled.</returns>
     string? SelectFolder(string? initialDirectory);
 
+    /// <returns>The chosen file, or <c>null</c> if the user cancelled.</returns>
+    string? SelectFile(string? initialFilePath, string filter, string title);
+
     string? GetClipboardText();
 
     /// <exception cref="DirectoryNotFoundException">The folder does not exist.</exception>

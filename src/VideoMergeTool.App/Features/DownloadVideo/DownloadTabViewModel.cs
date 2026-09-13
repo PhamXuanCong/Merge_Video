@@ -48,6 +48,8 @@ public sealed class DownloadTabViewModel : ObservableObject, IDisposable
     private bool _skipPreviouslyDownloaded = true;
     private bool _useBrowserCookies;
     private string _selectedBrowser = "Chrome";
+    private bool _useCookieFile;
+    private string _cookieFilePath = string.Empty;
     private string _channelName = "—";
     private string _statusText = "Sẵn sàng";
     private string _dependencySummary = "Chưa kiểm tra";
@@ -90,6 +92,7 @@ public sealed class DownloadTabViewModel : ObservableObject, IDisposable
         StartDownloadCommand = new AsyncRelayCommand(StartDownloadAsync, CanStartDownload);
         CancelDownloadCommand = new RelayCommand(CancelDownload, CanCancelDownload);
         BrowseOutputDirectoryCommand = new RelayCommand(BrowseOutputDirectory, () => !IsBusy);
+        BrowseCookieFileCommand = new RelayCommand(BrowseCookieFile, () => !IsBusy);
         PasteUrlCommand = new RelayCommand(PasteUrl, () => !IsBusy);
         SelectAllCommand = new RelayCommand(SelectAll, CanChangeSelection);
         UnselectAllCommand = new RelayCommand(UnselectAll, CanChangeSelection);
@@ -138,6 +141,8 @@ public sealed class DownloadTabViewModel : ObservableObject, IDisposable
     public IRelayCommand CancelDownloadCommand { get; }
 
     public IRelayCommand BrowseOutputDirectoryCommand { get; }
+
+    public IRelayCommand BrowseCookieFileCommand { get; }
 
     public IRelayCommand PasteUrlCommand { get; }
 
@@ -304,13 +309,39 @@ public sealed class DownloadTabViewModel : ObservableObject, IDisposable
     public bool UseBrowserCookies
     {
         get => _useBrowserCookies;
-        set => SetProperty(ref _useBrowserCookies, value);
+        set
+        {
+            if (SetProperty(ref _useBrowserCookies, value) && value)
+            {
+                // yt-dlp rejects a command line combining --cookies-from-browser and --cookies.
+                UseCookieFile = false;
+            }
+        }
     }
 
     public string SelectedBrowser
     {
         get => _selectedBrowser;
         set => SetProperty(ref _selectedBrowser, NormalizeBrowserDisplay(value));
+    }
+
+    /// <summary>The cookie file path is only ever passed to yt-dlp; it is never read, stored or logged by this app.</summary>
+    public bool UseCookieFile
+    {
+        get => _useCookieFile;
+        set
+        {
+            if (SetProperty(ref _useCookieFile, value) && value)
+            {
+                UseBrowserCookies = false;
+            }
+        }
+    }
+
+    public string CookieFilePath
+    {
+        get => _cookieFilePath;
+        set => SetProperty(ref _cookieFilePath, value ?? string.Empty);
     }
 
     public string ChannelName
@@ -470,6 +501,8 @@ public sealed class DownloadTabViewModel : ObservableObject, IDisposable
         SkipPreviouslyDownloaded = source.SkipPreviouslyDownloaded;
         UseBrowserCookies = source.UseBrowserCookies;
         SelectedBrowser = source.SelectedBrowser;
+        UseCookieFile = source.UseCookieFile;
+        CookieFilePath = source.CookieFilePath;
         IsDurationFilterEnabled = source.IsDurationFilterEnabled;
         SelectedDurationComparison = source.SelectedDurationComparison;
         DurationLimitValue = source.DurationLimitValue;
@@ -496,6 +529,8 @@ public sealed class DownloadTabViewModel : ObservableObject, IDisposable
         SkipPreviouslyDownloaded = settings.SkipPreviouslyDownloaded;
         UseBrowserCookies = settings.UseBrowserCookies;
         SelectedBrowser = NormalizeBrowserDisplay(settings.SelectedBrowser);
+        UseCookieFile = settings.UseCookieFile;
+        CookieFilePath = settings.CookieFilePath?.Trim() ?? string.Empty;
         IsDurationFilterEnabled = settings.IsDurationFilterEnabled;
         SelectedDurationComparison = settings.DurationFilterComparison;
         DurationLimitValue = settings.DurationLimitValue;
@@ -518,6 +553,8 @@ public sealed class DownloadTabViewModel : ObservableObject, IDisposable
             SkipPreviouslyDownloaded = SkipPreviouslyDownloaded,
             UseBrowserCookies = UseBrowserCookies,
             SelectedBrowser = SelectedBrowser.ToLowerInvariant(),
+            UseCookieFile = UseCookieFile,
+            CookieFilePath = CookieFilePath.Trim(),
             IsDurationFilterEnabled = IsDurationFilterEnabled,
             DurationFilterComparison = SelectedDurationComparison,
             DurationLimitValue = DurationLimitValue,
@@ -574,6 +611,8 @@ public sealed class DownloadTabViewModel : ObservableObject, IDisposable
                 resolveMissingDurations: IsDurationFilterEnabled,
                 UseBrowserCookies,
                 SelectedBrowser.ToLowerInvariant(),
+                UseCookieFile,
+                CookieFilePath.Trim(),
                 cancellationToken);
             ChannelName = result.ChannelName;
 
@@ -772,6 +811,28 @@ public sealed class DownloadTabViewModel : ObservableObject, IDisposable
         }
     }
 
+    private void BrowseCookieFile()
+    {
+        try
+        {
+            var selected = _dialogService.SelectFile(
+                CookieFilePath,
+                "Cookie files (*.txt)|*.txt|All files (*.*)|*.*",
+                "Chọn file cookie (Netscape/cookies.txt)");
+            if (!string.IsNullOrWhiteSpace(selected))
+            {
+                CookieFilePath = selected;
+                UseCookieFile = true;
+            }
+        }
+        catch (Exception exception) when (
+            exception is IOException or UnauthorizedAccessException or InvalidOperationException)
+        {
+            _logger.Error("Cookie file picker failed.", exception: exception);
+            _dialogService.ShowError("Không thể chọn file cookie. Hãy thử lại hoặc nhập đường dẫn trực tiếp.", "Lỗi file cookie");
+        }
+    }
+
     private void PasteUrl()
     {
         try
@@ -962,7 +1023,9 @@ public sealed class DownloadTabViewModel : ObservableObject, IDisposable
             DownloadSubtitles = DownloadSubtitles,
             SkipPreviouslyDownloaded = SkipPreviouslyDownloaded,
             UseBrowserCookies = UseBrowserCookies,
-            BrowserName = SelectedBrowser.ToLowerInvariant()
+            BrowserName = SelectedBrowser.ToLowerInvariant(),
+            UseCookieFile = UseCookieFile,
+            CookieFilePath = CookieFilePath.Trim()
         };
 
     private List<ContentType> GetSelectedContentTypes()
@@ -1119,6 +1182,7 @@ public sealed class DownloadTabViewModel : ObservableObject, IDisposable
         StartDownloadCommand.NotifyCanExecuteChanged();
         CancelDownloadCommand.NotifyCanExecuteChanged();
         BrowseOutputDirectoryCommand.NotifyCanExecuteChanged();
+        BrowseCookieFileCommand.NotifyCanExecuteChanged();
         PasteUrlCommand.NotifyCanExecuteChanged();
         SelectAllCommand.NotifyCanExecuteChanged();
         UnselectAllCommand.NotifyCanExecuteChanged();

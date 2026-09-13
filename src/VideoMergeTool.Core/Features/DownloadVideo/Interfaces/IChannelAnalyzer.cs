@@ -16,5 +16,7 @@ public interface IChannelAnalyzer
         bool resolveMissingDurations,
         bool useBrowserCookies,
         string browserName,
+        bool useCookieFile,
+        string cookieFilePath,
         CancellationToken cancellationToken);
 }
