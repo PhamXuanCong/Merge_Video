@@ -4,7 +4,8 @@
              xmlns:converters="clr-namespace:VideoMergeTool.App.Converters"
              xmlns:mergeVideo="clr-namespace:VideoMergeTool.App.Features.MergeVideo"
              xmlns:renameVideo="clr-namespace:VideoMergeTool.App.Features.RenameVideo"
-             xmlns:downloadVideo="clr-namespace:VideoMergeTool.App.Features.DownloadVideo">
+             xmlns:downloadVideo="clr-namespace:VideoMergeTool.App.Features.DownloadVideo"
+             xmlns:folderVideoStats="clr-namespace:VideoMergeTool.App.Features.FolderVideoStats">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -32,6 +33,10 @@
 
             <DataTemplate DataType="{x:Type downloadVideo:DownloadVideoViewModel}">
                 <downloadVideo:DownloadVideoView />
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type folderVideoStats:FolderVideoStatsViewModel}">
+                <folderVideoStats:FolderVideoStatsView />
             </DataTemplate>
         </ResourceDictionary>
     </Application.Resources>

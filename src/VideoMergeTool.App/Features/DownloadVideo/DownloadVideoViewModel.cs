@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using VideoMergeTool.App.Features.DownloadVideo.Services;
@@ -51,12 +52,18 @@ public sealed class DownloadVideoViewModel : ObservableObject, IDisposable, IClo
 
         AddTabCommand = new RelayCommand(AddTab);
         CloseTabCommand = new RelayCommand<DownloadTabViewModel>(CloseTab, CanCloseTab);
+        BrowseCookieFileCommand = new RelayCommand(BrowseCookieFile);
+
+        CookieFileSettings.PropertyChanged += OnCookieFileSettingsChanged;
 
         _selectedTab = CreateTab();
         Tabs.Add(_selectedTab);
     }
 
     public ObservableCollection<DownloadTabViewModel> Tabs { get; } = [];
+
+    /// <summary>The cookie file is chosen once here and shared by every tab; each tab reads it directly.</summary>
+    public SharedCookieFileSettings CookieFileSettings { get; } = new();
 
     public DownloadTabViewModel SelectedTab
     {
@@ -77,6 +84,8 @@ public sealed class DownloadVideoViewModel : ObservableObject, IDisposable, IClo
 
     public IRelayCommand<DownloadTabViewModel> CloseTabCommand { get; }
 
+    public IRelayCommand BrowseCookieFileCommand { get; }
+
     public void LoadSettings(UserSettings settings)
     {
         IReadOnlyList<DownloadTabSettings> savedTabs = settings.DownloadTabs.Count > 0
@@ -92,6 +101,11 @@ public sealed class DownloadVideoViewModel : ObservableObject, IDisposable, IClo
         }
 
         SelectedTab = Tabs[Math.Clamp(settings.DownloadSelectedTabIndex, 0, Tabs.Count - 1)];
+
+        // Applied after every tab so a saved cookie file wins over any stale per-tab browser-cookie flag.
+        CookieFileSettings.CookieFilePath = settings.DownloadCookieFilePath?.Trim() ?? string.Empty;
+        CookieFileSettings.UseCookieFile = settings.DownloadUseCookieFile;
+
         CloseTabCommand.NotifyCanExecuteChanged();
     }
 
@@ -100,7 +114,9 @@ public sealed class DownloadVideoViewModel : ObservableObject, IDisposable, IClo
         settings with
         {
             DownloadTabs = Tabs.Select(static tab => tab.CreateSettingsSnapshot()).ToList(),
-            DownloadSelectedTabIndex = Math.Max(0, Tabs.IndexOf(SelectedTab))
+            DownloadSelectedTabIndex = Math.Max(0, Tabs.IndexOf(SelectedTab)),
+            DownloadUseCookieFile = CookieFileSettings.UseCookieFile,
+            DownloadCookieFilePath = CookieFileSettings.CookieFilePath.Trim()
         };
 
     public void OnNavigatedTo() => _dependencyCheck ??= CheckDependenciesAsync();
@@ -139,6 +155,7 @@ public sealed class DownloadVideoViewModel : ObservableObject, IDisposable, IClo
         }
 
         _disposed = true;
+        CookieFileSettings.PropertyChanged -= OnCookieFileSettingsChanged;
         foreach (var tab in Tabs)
         {
             tab.PropertyChanged -= OnTabPropertyChanged;
@@ -247,6 +264,7 @@ public sealed class DownloadVideoViewModel : ObservableObject, IDisposable, IClo
             _dialogService,
             _archiveService,
             _logger,
+            CookieFileSettings,
             $"{TabTitlePrefix} {_nextTabNumber++}");
 
         if (_dependencyState is { } state)
@@ -264,6 +282,43 @@ public sealed class DownloadVideoViewModel : ObservableObject, IDisposable, IClo
         {
             OnPropertyChanged(nameof(IsBusy));
             CloseTabCommand.NotifyCanExecuteChanged();
+        }
+    }
+
+    private void BrowseCookieFile()
+    {
+        try
+        {
+            var selected = _dialogService.SelectFile(
+                CookieFileSettings.CookieFilePath,
+                "Cookie files (*.txt)|*.txt|All files (*.*)|*.*",
+                "Chọn file cookie (Netscape/cookies.txt)");
+            if (!string.IsNullOrWhiteSpace(selected))
+            {
+                CookieFileSettings.CookieFilePath = selected;
+                CookieFileSettings.UseCookieFile = true;
+            }
+        }
+        catch (Exception exception) when (
+            exception is IOException or UnauthorizedAccessException or InvalidOperationException)
+        {
+            _logger.Error("Cookie file picker failed.", exception: exception);
+            _dialogService.ShowError("Không thể chọn file cookie. Hãy thử lại hoặc nhập đường dẫn trực tiếp.", "Lỗi file cookie");
+        }
+    }
+
+    /// <summary>yt-dlp rejects a command line combining --cookies and --cookies-from-browser, so the
+    /// shared cookie file turning on must turn every tab's own browser-cookie option off.</summary>
+    private void OnCookieFileSettingsChanged(object? sender, PropertyChangedEventArgs args)
+    {
+        if (args.PropertyName != nameof(SharedCookieFileSettings.UseCookieFile) || !CookieFileSettings.UseCookieFile)
+        {
+            return;
+        }
+
+        foreach (var tab in Tabs)
+        {
+            tab.UseBrowserCookies = false;
         }
     }
 }

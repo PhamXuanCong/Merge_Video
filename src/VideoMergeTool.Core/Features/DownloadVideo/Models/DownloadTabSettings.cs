@@ -34,10 +34,6 @@ public sealed record DownloadTabSettings
 
     public string SelectedBrowser { get; init; } = "chrome";
 
-    public bool UseCookieFile { get; init; }
-
-    public string CookieFilePath { get; init; } = string.Empty;
-
     public bool IsDurationFilterEnabled { get; init; }
 
     public DurationFilterComparison DurationFilterComparison { get; init; } =

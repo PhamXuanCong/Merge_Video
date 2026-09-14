@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using VideoMergeTool.App.Features.DownloadVideo;
+using VideoMergeTool.App.Features.FolderVideoStats;
 using VideoMergeTool.App.Features.MergeVideo;
 using VideoMergeTool.App.Features.RenameVideo;
 using VideoMergeTool.App.Theming;
@@ -22,25 +23,29 @@ public sealed partial class ShellViewModel : ObservableObject
     private readonly MergeVideoViewModel _mergeVideoViewModel;
     private readonly RenameVideoViewModel _renameVideoViewModel;
     private readonly DownloadVideoViewModel _downloadVideoViewModel;
+    private readonly FolderVideoStatsViewModel _folderVideoStatsViewModel;
 
     public ShellViewModel(
         IUserSettingsService userSettingsService,
         ThemeManager themeManager,
         MergeVideoViewModel mergeVideoViewModel,
         RenameVideoViewModel renameVideoViewModel,
-        DownloadVideoViewModel downloadVideoViewModel)
+        DownloadVideoViewModel downloadVideoViewModel,
+        FolderVideoStatsViewModel folderVideoStatsViewModel)
     {
         _userSettingsService = userSettingsService;
         _themeManager = themeManager;
         _mergeVideoViewModel = mergeVideoViewModel;
         _renameVideoViewModel = renameVideoViewModel;
         _downloadVideoViewModel = downloadVideoViewModel;
+        _folderVideoStatsViewModel = folderVideoStatsViewModel;
 
         NavigationItems =
         [
             new NavigationItem("Merge Video", mergeVideoViewModel),
             new NavigationItem("Đổi tên video", renameVideoViewModel),
-            new NavigationItem("Tải video YouTube", downloadVideoViewModel)
+            new NavigationItem("Tải video YouTube", downloadVideoViewModel),
+            new NavigationItem("Số lượng video theo folder", folderVideoStatsViewModel)
         ];
 
         var settings = _userSettingsService.Load();
@@ -52,6 +57,7 @@ public sealed partial class ShellViewModel : ObservableObject
         mergeVideoViewModel.LoadSettings(settings);
         renameVideoViewModel.LoadSettings(settings);
         downloadVideoViewModel.LoadSettings(settings);
+        folderVideoStatsViewModel.LoadSettings(settings);
 
         _selectedNavigationItem = NavigationItems[0];
         _currentPage = _selectedNavigationItem.ViewModel;
@@ -101,6 +107,7 @@ public sealed partial class ShellViewModel : ObservableObject
         var settings = _mergeVideoViewModel.ExportSettings() with { ThemePreference = ThemePreference };
         settings = _renameVideoViewModel.ExportSettings(settings);
         settings = _downloadVideoViewModel.ExportSettings(settings);
+        settings = _folderVideoStatsViewModel.ExportSettings(settings);
         _userSettingsService.Save(settings);
     }
 }

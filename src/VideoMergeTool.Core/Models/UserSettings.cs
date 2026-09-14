@@ -46,6 +46,14 @@ public sealed record UserSettings
 
     public int DownloadSelectedTabIndex { get; init; }
 
+    /// <summary>Shared by every downloader tab, not saved per tab: only one cookie file is ever active at a time.</summary>
+    public bool DownloadUseCookieFile { get; init; }
+
+    public string DownloadCookieFilePath { get; init; } = string.Empty;
+
+    /// <summary>Folders tracked by the folder video-count table, in the order they were added.</summary>
+    public IReadOnlyList<string> FolderStatsFolders { get; init; } = [];
+
     // Record-synthesized equality would compare the lists by reference, so two settings
     // loaded from the same JSON would never be equal. Compare them by sequence instead.
     public bool Equals(UserSettings? other) =>
@@ -62,8 +70,11 @@ public sealed record UserSettings
         RenameFolder == other.RenameFolder &&
         RenameHashtags == other.RenameHashtags &&
         DownloadSelectedTabIndex == other.DownloadSelectedTabIndex &&
+        DownloadUseCookieFile == other.DownloadUseCookieFile &&
+        DownloadCookieFilePath == other.DownloadCookieFilePath &&
         RecentFolders.SequenceEqual(other.RecentFolders) &&
-        DownloadTabs.SequenceEqual(other.DownloadTabs);
+        DownloadTabs.SequenceEqual(other.DownloadTabs) &&
+        FolderStatsFolders.SequenceEqual(other.FolderStatsFolders);
 
     public override int GetHashCode()
     {
@@ -80,6 +91,8 @@ public sealed record UserSettings
         hash.Add(RenameFolder);
         hash.Add(RenameHashtags);
         hash.Add(DownloadSelectedTabIndex);
+        hash.Add(DownloadUseCookieFile);
+        hash.Add(DownloadCookieFilePath);
         foreach (var folder in RecentFolders)
         {
             hash.Add(folder);
@@ -88,6 +101,11 @@ public sealed record UserSettings
         foreach (var tab in DownloadTabs)
         {
             hash.Add(tab);
+        }
+
+        foreach (var folder in FolderStatsFolders)
+        {
+            hash.Add(folder);
         }
 
         return hash.ToHashCode();

@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using VideoMergeTool.App.Features.DownloadVideo;
 using VideoMergeTool.App.Features.DownloadVideo.Services;
+using VideoMergeTool.App.Features.FolderVideoStats;
 using VideoMergeTool.App.Features.MergeVideo;
 using VideoMergeTool.App.Features.MergeVideo.Services;
 using VideoMergeTool.App.Features.RenameVideo;
@@ -11,12 +12,14 @@ using VideoMergeTool.App.Features.RenameVideo.Services;
 using VideoMergeTool.App.Shell;
 using VideoMergeTool.App.Theming;
 using VideoMergeTool.Core.Features.DownloadVideo.Interfaces;
+using VideoMergeTool.Core.Features.FolderVideoStats.Interfaces;
 using VideoMergeTool.Core.Features.MergeVideo.Interfaces;
 using VideoMergeTool.Core.Features.RenameVideo.Interfaces;
 using VideoMergeTool.Core.Interfaces;
 using VideoMergeTool.Core.Models;
 using VideoMergeTool.Infrastructure;
 using VideoMergeTool.Infrastructure.Features.DownloadVideo;
+using VideoMergeTool.Infrastructure.Features.FolderVideoStats;
 using VideoMergeTool.Infrastructure.Features.MergeVideo;
 using VideoMergeTool.Infrastructure.Features.RenameVideo;
 
@@ -64,6 +67,8 @@ public partial class App : Application
                 services.AddSingleton<IVideoDownloadService, YtDlpDownloadService>();
                 services.AddSingleton<IDownloadDialogService, DownloadDialogService>();
                 services.AddSingleton<DownloadVideoViewModel>();
+                services.AddSingleton<IFolderVideoCounter, FolderVideoCounter>();
+                services.AddSingleton<FolderVideoStatsViewModel>();
                 services.AddSingleton<ShellViewModel>();
             })
             .Build();

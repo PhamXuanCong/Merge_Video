@@ -1,0 +1,301 @@
+<UserControl x:Class="VideoMergeTool.App.Features.FolderVideoStats.FolderVideoStatsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:local="clr-namespace:VideoMergeTool.App.Features.FolderVideoStats"
+             xmlns:coreModels="clr-namespace:VideoMergeTool.Core.Features.FolderVideoStats.Models;assembly=VideoMergeTool.Core"
+             mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <!-- Small rotating arrow: collapsed points right, expanded points down. -->
+        <Style x:Key="ExpandToggleButton" TargetType="ToggleButton">
+            <Setter Property="Width" Value="22" />
+            <Setter Property="Height" Value="22" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="4">
+                            <Path x:Name="Arrow" Width="8" Height="8" Stretch="Uniform"
+                                  Fill="{DynamicResource TextSecondary}"
+                                  Data="M 0 0 L 8 4 L 0 8 Z"
+                                  HorizontalAlignment="Center" VerticalAlignment="Center"
+                                  RenderTransformOrigin="0.5,0.5">
+                                <Path.RenderTransform>
+                                    <RotateTransform Angle="0" />
+                                </Path.RenderTransform>
+                            </Path>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource RowHover}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Arrow" Property="RenderTransform">
+                                    <Setter.Value>
+                                        <RotateTransform Angle="90" />
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Small text-glyph action button (refresh "↻", remove "×"). -->
+        <Style x:Key="RowIconButton" TargetType="Button">
+            <Setter Property="Width" Value="26" />
+            <Setter Property="Height" Value="26" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg" Background="Transparent" CornerRadius="4">
+                            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Text="{TemplateBinding Content}"
+                                       Foreground="{TemplateBinding Foreground}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource RowHover}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- One direct subfolder row, indented under its parent. -->
+        <DataTemplate x:Key="SubfolderRowTemplate" DataType="{x:Type coreModels:SubfolderVideoCount}">
+            <Grid Margin="0,4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="22" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="110" />
+                    <ColumnDefinition Width="86" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="1" Margin="10,0,8,0"
+                           Foreground="{DynamicResource TextSecondary}"
+                           Text="{Binding FolderName}"
+                           ToolTip="{Binding FolderPath}"
+                           TextTrimming="CharacterEllipsis" />
+                <TextBlock Grid.Column="2" Text="{Binding VideoCount}" />
+            </Grid>
+        </DataTemplate>
+
+        <!-- One tracked folder: header row, then (if expanded) its subfolders. -->
+        <DataTemplate x:Key="FolderRowTemplate" DataType="{x:Type local:FolderRowViewModel}">
+            <Border Margin="0,3" Padding="0,6" BorderBrush="{DynamicResource BorderBrushSoft}" BorderThickness="0,0,0,1">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="22" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="110" />
+                            <ColumnDefinition Width="86" />
+                        </Grid.ColumnDefinitions>
+
+                        <ToggleButton Grid.Column="0" Style="{StaticResource ExpandToggleButton}"
+                                      IsChecked="{Binding IsExpanded, Mode=TwoWay}"
+                                      ToolTip="Mở/đóng danh sách thư mục con" />
+
+                        <StackPanel Grid.Column="1" Margin="0,0,8,0" VerticalAlignment="Center">
+                            <TextBlock FontWeight="SemiBold"
+                                       Text="{Binding FolderName}"
+                                       ToolTip="{Binding FolderPath}"
+                                       TextTrimming="CharacterEllipsis" />
+                            <TextBlock FontSize="11" Foreground="{DynamicResource TextSecondary}"
+                                       Text="{Binding FolderPath}"
+                                       TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+
+                        <TextBlock Grid.Column="2" VerticalAlignment="Center" FontWeight="SemiBold">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Text" Value="{Binding VideoCount}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsScanning}" Value="True">
+                                            <Setter Property="Text" Value="…" />
+                                            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+
+                        <StackPanel Grid.Column="3" Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Style="{StaticResource RowIconButton}" Content="↻"
+                                    ToolTip="Quét lại thư mục này"
+                                    Command="{Binding DataContext.RefreshFolderCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                    CommandParameter="{Binding}" />
+                            <Button Style="{StaticResource RowIconButton}" Content="×"
+                                    ToolTip="Bỏ khỏi danh sách"
+                                    Command="{Binding DataContext.RemoveFolderCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                    CommandParameter="{Binding}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <TextBlock Margin="32,4,0,0" FontSize="11"
+                               Foreground="{DynamicResource StatusFailed}"
+                               Text="{Binding StatusText}"
+                               TextWrapping="Wrap">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsScanning}" Value="False">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+
+                    <ItemsControl Margin="0,2,0,0" ItemsSource="{Binding Subfolders}"
+                                  ItemTemplate="{StaticResource SubfolderRowTemplate}">
+                        <ItemsControl.Style>
+                            <Style TargetType="ItemsControl">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsExpanded}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ItemsControl.Style>
+                    </ItemsControl>
+
+                    <TextBlock Margin="32,4,0,0" FontSize="11"
+                               Foreground="{DynamicResource TextSecondary}"
+                               Text="Không có thư mục con.">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding IsExpanded}" Value="True" />
+                                            <Condition Binding="{Binding Subfolders.Count}" Value="0" />
+                                            <Condition Binding="{Binding IsScanning}" Value="False" />
+                                            <Condition Binding="{Binding StatusText}" Value="" />
+                                        </MultiDataTrigger.Conditions>
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </MultiDataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid Margin="18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Add folder -->
+        <Border Grid.Row="0" Style="{StaticResource SectionCard}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.ColumnSpan="4" Style="{StaticResource FieldLabel}"
+                           Text="THÊM THƯ MỤC  ·  kéo thả thư mục vào cửa sổ này" />
+
+                <TextBox Grid.Row="1" Grid.Column="0" Margin="0,0,8,0"
+                         Style="{StaticResource RoundedTextBox}"
+                         Text="{Binding NewFolderPath, UpdateSourceTrigger=PropertyChanged}"
+                         KeyDown="NewFolderPath_KeyDown" />
+                <Button Grid.Row="1" Grid.Column="1" Margin="0,0,8,0"
+                        Style="{StaticResource BaseButton}"
+                        Command="{Binding AddTypedFolderCommand}" Content="Thêm" />
+                <Button Grid.Row="1" Grid.Column="2" Margin="0,0,8,0"
+                        Style="{StaticResource BaseButton}"
+                        Click="BrowseFolder_Click" Content="Duyệt…" />
+                <Button Grid.Row="1" Grid.Column="3"
+                        Style="{StaticResource BaseButton}"
+                        Command="{Binding RefreshAllCommand}" Content="Làm mới tất cả" />
+            </Grid>
+        </Border>
+
+        <!-- Folder table -->
+        <Border Grid.Row="1" Margin="0,14,0,0" Style="{StaticResource SectionCard}" Padding="0"
+                ClipToBounds="True">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Height="34" Margin="14,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="22" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="110" />
+                        <ColumnDefinition Width="86" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="1" Style="{StaticResource FieldLabel}" Margin="0" VerticalAlignment="Center"
+                               Text="THƯ MỤC" />
+                    <TextBlock Grid.Column="2" Style="{StaticResource FieldLabel}" Margin="0" VerticalAlignment="Center"
+                               Text="SỐ VIDEO" />
+                </Grid>
+
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                              Padding="14,0,14,10">
+                    <ItemsControl x:Name="FoldersList" ItemsSource="{Binding Folders}"
+                                  ItemTemplate="{StaticResource FolderRowTemplate}" />
+                </ScrollViewer>
+
+                <!-- Empty state -->
+                <StackPanel Grid.Row="0" Grid.RowSpan="2" HorizontalAlignment="Center" VerticalAlignment="Center"
+                            Margin="24" IsHitTestVisible="False">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Folders.Count}" Value="0">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+
+                    <Path Width="46" Height="38" Stretch="Uniform"
+                          HorizontalAlignment="Center"
+                          Stroke="{DynamicResource BorderBrushSoft}" StrokeThickness="1.5"
+                          StrokeLineJoin="Round"
+                          Data="M 2 6 L 2 26 L 30 26 L 30 10 L 15 10 L 12 6 Z" />
+                    <TextBlock Margin="0,14,0,0" HorizontalAlignment="Center"
+                               FontSize="14" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextSecondary}"
+                               Text="Chưa có thư mục nào" />
+                    <TextBlock Margin="0,6,0,0" HorizontalAlignment="Center"
+                               TextAlignment="Center" FontSize="12"
+                               Foreground="{DynamicResource TextSecondary}"
+                               Text="Kéo thả một thư mục vào đây, hoặc dùng ô nhập/nút Duyệt ở trên." />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Footer -->
+        <TextBlock Grid.Row="2" Margin="2,12,2,0" TextWrapping="Wrap" Text="{Binding SummaryText}" />
+    </Grid>
+</UserControl>

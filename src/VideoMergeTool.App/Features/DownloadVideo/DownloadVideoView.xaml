@@ -208,24 +208,9 @@
                                               ToolTip="Dùng file archive.txt trong thư mục kênh để không tải lại video cũ"
                                               IsChecked="{Binding SkipPreviouslyDownloaded}" />
                                     <CheckBox Style="{StaticResource OptionCheckBox}" Content="Dùng tài khoản trình duyệt"
-                                              ToolTip="Chỉ bật khi bạn chủ động muốn yt-dlp đọc phiên đăng nhập hiện có. Cookie không được xuất hay ghi log."
+                                              ToolTip="Chỉ bật khi bạn chủ động muốn yt-dlp đọc phiên đăng nhập hiện có. Cookie không được xuất hay ghi log. Tự tắt nếu đang bật &quot;Dùng file cookie&quot; (cấu hình dùng chung ở trên)."
                                               IsChecked="{Binding UseBrowserCookies}" />
-                                    <CheckBox Style="{StaticResource OptionCheckBox}" Content="Dùng file cookie"
-                                              ToolTip="Dùng file cookies.txt (định dạng Netscape) xuất từ trình duyệt. Chỉ dùng một trong hai cách lấy cookie."
-                                              IsChecked="{Binding UseCookieFile}" />
                                 </WrapPanel>
-
-                                <Grid IsEnabled="{Binding UseCookieFile}">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBox Style="{StaticResource RoundedTextBox}"
-                                             ToolTip="Đường dẫn file cookies.txt"
-                                             Text="{Binding CookieFilePath, UpdateSourceTrigger=PropertyChanged}" />
-                                    <Button Grid.Column="1" Margin="8,0,0,0" Style="{StaticResource CompactButton}"
-                                            Command="{Binding BrowseCookieFileCommand}" Content="Chọn…" />
-                                </Grid>
 
                                 <TextBlock Style="{StaticResource SectionLabel}" Text="BỘ LỌC" />
                                 <CheckBox Style="{StaticResource OptionCheckBox}" Content="Lọc theo thời lượng"
@@ -560,6 +545,7 @@
     <Grid Margin="18">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
@@ -612,7 +598,29 @@
                     Command="{Binding AddTabCommand}" Content="+ Thêm chủ đề" />
         </Grid>
 
-        <ContentControl Grid.Row="1" Focusable="False"
+        <!-- Cookie file: chosen once, shared by every tab -->
+        <Border Grid.Row="1" Margin="0,0,0,12" Style="{StaticResource SectionCard}" Padding="14,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <CheckBox Grid.Column="0" VerticalAlignment="Center" Style="{StaticResource OptionCheckBox}"
+                          Content="Dùng file cookie (áp dụng cho mọi chủ đề)"
+                          ToolTip="Cookie dùng chung cho mọi chủ đề. Chỉ dùng một trong hai cách lấy cookie: file này, hoặc &quot;Dùng tài khoản trình duyệt&quot; theo từng chủ đề."
+                          IsChecked="{Binding CookieFileSettings.UseCookieFile}" />
+                <TextBox Grid.Column="1" Margin="14,0,10,0" Style="{StaticResource RoundedTextBox}"
+                         IsEnabled="{Binding CookieFileSettings.UseCookieFile}"
+                         ToolTip="Đường dẫn file cookies.txt"
+                         Text="{Binding CookieFileSettings.CookieFilePath, UpdateSourceTrigger=PropertyChanged}" />
+                <Button Grid.Column="2" Style="{StaticResource CompactButton}"
+                        IsEnabled="{Binding CookieFileSettings.UseCookieFile}"
+                        Command="{Binding BrowseCookieFileCommand}" Content="Chọn…" />
+            </Grid>
+        </Border>
+
+        <ContentControl Grid.Row="2" Focusable="False"
                         Content="{Binding SelectedTab}"
                         ContentTemplate="{StaticResource TabContentTemplate}" />
     </Grid>
