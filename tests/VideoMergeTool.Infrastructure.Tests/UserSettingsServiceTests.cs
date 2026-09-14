@@ -1,4 +1,5 @@
 using VideoMergeTool.Core.Enums;
+using VideoMergeTool.Core.Features.FolderVideoStats.Models;
 using VideoMergeTool.Core.Features.MergeVideo.Enums;
 using VideoMergeTool.Core.Models;
 using VideoMergeTool.Infrastructure;
@@ -66,6 +67,26 @@ public sealed class UserSettingsServiceTests : IDisposable
 
         Assert.Equal(settings, loaded);
         Assert.Equal(settings.RecentFolders, loaded.RecentFolders);
+    }
+
+    [Fact]
+    public void SaveThenLoadRoundTripsFolderStatsFolders()
+    {
+        var service = new UserSettingsService(_settingsFilePath);
+        var settings = new UserSettings
+        {
+            FolderStatsFolders =
+            [
+                new FolderStatsFolderSettings(Path.Combine("C:", "videos", "channel-a"), "Giải trí", "#giaitri"),
+                new FolderStatsFolderSettings(Path.Combine("D:", "videos", "channel-b"), string.Empty, string.Empty)
+            ]
+        };
+
+        service.Save(settings);
+        var loaded = service.Load();
+
+        Assert.Equal(settings, loaded);
+        Assert.Equal(settings.FolderStatsFolders, loaded.FolderStatsFolders);
     }
 
     [Fact]

@@ -59,6 +59,14 @@ public sealed partial class ShellViewModel : ObservableObject
         downloadVideoViewModel.LoadSettings(settings);
         folderVideoStatsViewModel.LoadSettings(settings);
 
+        // Added after the initial load so restoring the saved folders doesn't itself trigger a
+        // save per folder. A folder the user adds is easy to forget about and tedious to redo
+        // (it has to be rescanned), so it is written to disk right away rather than only on a
+        // graceful window close — closing via a debugger stop or a killed process never reaches
+        // ShellWindow's Closing event, and would otherwise silently drop everything added since
+        // the last clean close.
+        folderVideoStatsViewModel.Folders.CollectionChanged += (_, _) => SaveSettings();
+
         _selectedNavigationItem = NavigationItems[0];
         _currentPage = _selectedNavigationItem.ViewModel;
     }
