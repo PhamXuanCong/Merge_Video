@@ -20,6 +20,14 @@ public sealed partial class FolderRowViewModel : ObservableObject
     /// <summary>Just the last path segment, e.g. "channel-a" rather than the full path — a bare drive keeps the full path since it has no name segment.</summary>
     public string FolderName { get; }
 
+    /// <summary>What kind of channel this folder is, as typed by the user (each folder is one YouTube channel).</summary>
+    [ObservableProperty]
+    private string _topic = string.Empty;
+
+    /// <summary>The hashtag that goes with this channel, as typed by the user.</summary>
+    [ObservableProperty]
+    private string _hashtag = string.Empty;
+
     [ObservableProperty]
     private int _videoCount;
 

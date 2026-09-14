@@ -31,6 +31,8 @@
                        Foreground="{DynamicResource TextPrimary}" Text="Video Merge Tool" />
 
             <ListBox Grid.Row="1" Margin="8,0" BorderThickness="0" Background="Transparent"
+                     ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                     ScrollViewer.VerticalScrollBarVisibility="Auto"
                      ItemsSource="{Binding NavigationItems}"
                      SelectedItem="{Binding SelectedNavigationItem}">
                 <ListBox.ItemContainerStyle>

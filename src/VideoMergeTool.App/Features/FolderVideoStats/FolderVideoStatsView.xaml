@@ -141,6 +141,26 @@
                         </StackPanel>
                     </Grid>
 
+                    <Grid Margin="32,6,8,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" MinWidth="120" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" MinWidth="120" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="CHỦ ĐỀ" />
+                            <TextBox Style="{StaticResource RoundedTextBox}"
+                                     Text="{Binding Topic, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="HASHTAG" />
+                            <TextBox Style="{StaticResource RoundedTextBox}"
+                                     Text="{Binding Hashtag, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                    </Grid>
+
                     <TextBlock Margin="32,4,0,0" FontSize="11"
                                Foreground="{DynamicResource StatusFailed}"
                                Text="{Binding StatusText}"

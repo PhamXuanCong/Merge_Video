@@ -1,5 +1,6 @@
 using VideoMergeTool.Core.Enums;
 using VideoMergeTool.Core.Features.DownloadVideo.Models;
+using VideoMergeTool.Core.Features.FolderVideoStats.Models;
 using VideoMergeTool.Core.Features.MergeVideo.Enums;
 
 namespace VideoMergeTool.Core.Models;
@@ -52,7 +53,7 @@ public sealed record UserSettings
     public string DownloadCookieFilePath { get; init; } = string.Empty;
 
     /// <summary>Folders tracked by the folder video-count table, in the order they were added.</summary>
-    public IReadOnlyList<string> FolderStatsFolders { get; init; } = [];
+    public IReadOnlyList<FolderStatsFolderSettings> FolderStatsFolders { get; init; } = [];
 
     // Record-synthesized equality would compare the lists by reference, so two settings
     // loaded from the same JSON would never be equal. Compare them by sequence instead.

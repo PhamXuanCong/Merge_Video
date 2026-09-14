@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using VideoMergeTool.App.Shell;
 using VideoMergeTool.Core.Features.FolderVideoStats.Interfaces;
+using VideoMergeTool.Core.Features.FolderVideoStats.Models;
 using VideoMergeTool.Core.Models;
 
 namespace VideoMergeTool.App.Features.FolderVideoStats;
@@ -33,14 +34,19 @@ public sealed partial class FolderVideoStatsViewModel : ObservableObject, IDispo
 
     public void LoadSettings(UserSettings settings)
     {
-        foreach (var folder in settings.FolderStatsFolders)
+        foreach (var entry in settings.FolderStatsFolders)
         {
-            AddFolder(folder);
+            AddFolder(entry.FolderPath, entry.Topic, entry.Hashtag);
         }
     }
 
     public UserSettings ExportSettings(UserSettings settings) =>
-        settings with { FolderStatsFolders = Folders.Select(static row => row.FolderPath).ToList() };
+        settings with
+        {
+            FolderStatsFolders = Folders
+                .Select(static row => new FolderStatsFolderSettings(row.FolderPath, row.Topic, row.Hashtag))
+                .ToList()
+        };
 
     /// <summary>Mirrors the other tabs' drag-and-drop behaviour: dropping a folder adds and scans it.</summary>
     public void OnFolderDropped(string folderPath) => AddFolder(folderPath);
@@ -69,7 +75,9 @@ public sealed partial class FolderVideoStatsViewModel : ObservableObject, IDispo
     private async Task RefreshAllAsync() => await Task.WhenAll(Folders.Select(ScanAsync));
 
     /// <summary>Also used by the "add by path" box and the drag-and-drop handler.</summary>
-    public void AddFolder(string folderPath)
+    public void AddFolder(string folderPath) => AddFolder(folderPath, string.Empty, string.Empty);
+
+    private void AddFolder(string folderPath, string topic, string hashtag)
     {
         var trimmed = folderPath.Trim().TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
         if (string.IsNullOrWhiteSpace(trimmed))
@@ -89,7 +97,7 @@ public sealed partial class FolderVideoStatsViewModel : ObservableObject, IDispo
             return;
         }
 
-        var row = new FolderRowViewModel(trimmed);
+        var row = new FolderRowViewModel(trimmed) { Topic = topic, Hashtag = hashtag };
         Folders.Add(row);
         UpdateSummary();
         _ = ScanAsync(row);
