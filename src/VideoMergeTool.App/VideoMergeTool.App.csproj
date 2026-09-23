@@ -14,18 +14,22 @@
     <None Update="Assets\CompanionVideos\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
     </None>
     <None Update="Tools\ffmpeg.exe;Tools\ffprobe.exe;Tools\yt-dlp.exe;appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
     </None>
     <None Update="Licenses\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
     </None>
     <None Update="README.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
     </None>
   </ItemGroup>
 
@@ -42,11 +46,28 @@
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>true</SelfContained>
-    <PublishSingleFile>false</PublishSingleFile>
+    <!-- The app and the .NET runtime go into one VideoMergeTool.exe. Tools, Assets, Licenses,
+         README.txt and appsettings.json stay as loose files beside it: they are resolved from
+         AppContext.BaseDirectory and FFmpeg/yt-dlp must exist on disk to be started. -->
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
     <PublishTrimmed>false</PublishTrimmed>
     <PublishReadyToRun>false</PublishReadyToRun>
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>
+    <!-- Keep the Core/Infrastructure .pdb files out of the publish folder. -->
+    <AllowedReferenceRelatedFileExtensions>none</AllowedReferenceRelatedFileExtensions>
   </PropertyGroup>
+
+  <!-- A Release build (Visual Studio or dotnet build -c Release) also publishes the single-file exe
+       to bin\Release\net8.0-windows\win-x64\publish. Pass -p:AutoPublishOnBuild=false to skip it. -->
+  <Target Name="AutoPublishSingleFile"
+          AfterTargets="Build"
+          Condition="'$(Configuration)' == 'Release' and '$(AutoPublishOnBuild)' != 'false' and '$(_IsPublishing)' != 'true'">
+    <MSBuild Projects="$(MSBuildProjectFullPath)"
+             Targets="Publish"
+             Properties="NoBuild=true;AutoPublishOnBuild=false;_IsPublishing=true" />
+  </Target>
 
 </Project>

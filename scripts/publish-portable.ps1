@@ -34,7 +34,8 @@ if (Test-Path -LiteralPath $zipPath) {
 }
 
 Invoke-DotNet @("restore", $solutionPath)
-Invoke-DotNet @("build", $solutionPath, "--configuration", "Release")
+# The publish step below produces the package, so skip the project's own publish-on-build.
+Invoke-DotNet @("build", $solutionPath, "--configuration", "Release", "-p:AutoPublishOnBuild=false")
 
 $testProjects = Get-ChildItem -LiteralPath (Join-Path $repositoryRoot "tests") -Filter "*.csproj" -File -Recurse
 foreach ($testProject in $testProjects) {
@@ -54,7 +55,9 @@ Invoke-DotNet @(
     "--self-contained", "true",
     "--output", $publishDirectory,
     "--no-restore",
-    "-p:PublishSingleFile=false",
+    "-p:PublishSingleFile=true",
+    "-p:IncludeNativeLibrariesForSelfExtract=true",
+    "-p:EnableCompressionInSingleFile=true",
     "-p:PublishTrimmed=false",
     "-p:PublishReadyToRun=false",
     "-p:DebugType=None",
@@ -66,6 +69,7 @@ $requiredPaths = @(
     "VideoMergeTool.exe",
     "Tools\ffmpeg.exe",
     "Tools\ffprobe.exe",
+    "Tools\yt-dlp.exe",
     "Assets\CompanionVideos",
     "Licenses",
     "README.txt"
@@ -76,6 +80,11 @@ foreach ($relativePath in $requiredPaths) {
     if (-not (Test-Path -LiteralPath $path)) {
         throw "Published package is missing required path: $path"
     }
+}
+
+$looseAssemblies = Get-ChildItem -LiteralPath $publishDirectory -Filter "*.dll" -File
+if ($looseAssemblies.Count -gt 0) {
+    throw "Single-file publish left loose DLLs beside VideoMergeTool.exe: $($looseAssemblies.Name -join ', ')"
 }
 
 $companionVideos = Get-ChildItem -LiteralPath (Join-Path $publishDirectory "Assets\CompanionVideos") -File -Recurse |
