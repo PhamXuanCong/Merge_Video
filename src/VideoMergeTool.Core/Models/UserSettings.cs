@@ -42,6 +42,9 @@ public sealed record UserSettings
     /// <summary>Hashtags last appended by the bulk video renamer, as typed.</summary>
     public string RenameHashtags { get; init; } = string.Empty;
 
+    /// <summary>Characters the bulk video renamer last removed from the start of each name.</summary>
+    public int RenameRemoveLeadingCount { get; init; }
+
     /// <summary>One entry per YouTube downloader tab; empty until the downloader has been saved once.</summary>
     public IReadOnlyList<DownloadTabSettings> DownloadTabs { get; init; } = [];
 
@@ -70,6 +73,7 @@ public sealed record UserSettings
         ThemePreference == other.ThemePreference &&
         RenameFolder == other.RenameFolder &&
         RenameHashtags == other.RenameHashtags &&
+        RenameRemoveLeadingCount == other.RenameRemoveLeadingCount &&
         DownloadSelectedTabIndex == other.DownloadSelectedTabIndex &&
         DownloadUseCookieFile == other.DownloadUseCookieFile &&
         DownloadCookieFilePath == other.DownloadCookieFilePath &&
@@ -91,6 +95,7 @@ public sealed record UserSettings
         hash.Add(ThemePreference);
         hash.Add(RenameFolder);
         hash.Add(RenameHashtags);
+        hash.Add(RenameRemoveLeadingCount);
         hash.Add(DownloadSelectedTabIndex);
         hash.Add(DownloadUseCookieFile);
         hash.Add(DownloadCookieFilePath);

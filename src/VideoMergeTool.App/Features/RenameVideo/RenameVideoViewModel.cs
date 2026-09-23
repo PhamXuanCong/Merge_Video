@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using VideoMergeTool.App.Features.RenameVideo.Services;
@@ -39,10 +40,18 @@ public sealed partial class RenameVideoViewModel : ObservableObject, IDisposable
     {
         Folder = settings.RenameFolder;
         HashtagText = settings.RenameHashtags;
+        RemoveLeadingText = settings.RenameRemoveLeadingCount > 0
+            ? settings.RenameRemoveLeadingCount.ToString(CultureInfo.InvariantCulture)
+            : string.Empty;
     }
 
     public UserSettings ExportSettings(UserSettings settings) =>
-        settings with { RenameFolder = Folder, RenameHashtags = HashtagText };
+        settings with
+        {
+            RenameFolder = Folder,
+            RenameHashtags = HashtagText,
+            RenameRemoveLeadingCount = RemoveLeadingCount
+        };
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ScanCommand), nameof(UndoCommand))]
@@ -50,6 +59,11 @@ public sealed partial class RenameVideoViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     private string _hashtagText = string.Empty;
+
+    /// <summary>Number of characters to drop from the start of each name, as typed. Blank means none.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsRemoveLeadingTextValid))]
+    private string _removeLeadingText = string.Empty;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(CancelCommand))]
@@ -71,6 +85,11 @@ public sealed partial class RenameVideoViewModel : ObservableObject, IDisposable
 
     public bool IsIdle => !IsBusy;
 
+    public bool IsRemoveLeadingTextValid => TryParseRemoveLeading(RemoveLeadingText, out _);
+
+    /// <summary>Invalid text counts as zero, so a typo never strips characters the user did not ask for.</summary>
+    private int RemoveLeadingCount => TryParseRemoveLeading(RemoveLeadingText, out var count) ? count : 0;
+
     public string SupportedExtensionsText { get; } = string.Join(", ", VideoNameRules.VideoExtensions);
 
     partial void OnFolderChanged(string value)
@@ -82,6 +101,14 @@ public sealed partial class RenameVideoViewModel : ObservableObject, IDisposable
     }
 
     partial void OnHashtagTextChanged(string value)
+    {
+        if (!IsBusy && _snapshot is not null)
+        {
+            RebuildPreview();
+        }
+    }
+
+    partial void OnRemoveLeadingTextChanged(string value)
     {
         if (!IsBusy && _snapshot is not null)
         {
@@ -332,7 +359,7 @@ public sealed partial class RenameVideoViewModel : ObservableObject, IDisposable
             return;
         }
 
-        _plan = RenamePlanner.Plan(_snapshot, HashtagText);
+        _plan = RenamePlanner.Plan(_snapshot, HashtagText, RemoveLeadingCount);
         ReplaceItems(_plan.Select(item => new RenameItemViewModel(item)));
         Progress = 0;
 
@@ -342,7 +369,7 @@ public sealed partial class RenameVideoViewModel : ObservableObject, IDisposable
         SummaryText = _plan.Count == 0
             ? $"Không có video nào ({SupportedExtensionsText}) nằm trực tiếp trong thư mục này."
             : changeCount == 0
-                ? "Không có file nào cần đổi tên. Hãy nhập hashtag hoặc chọn thư mục khác."
+                ? "Không có file nào cần đổi tên. Hãy nhập hashtag, số ký tự cần xoá hoặc chọn thư mục khác."
                 : $"Xem trước: {changeCount} video sẽ được đổi tên. Kiểm tra danh sách rồi bấm \"Đổi tên hàng loạt\".";
         CountsText = _plan.Count == 0
             ? string.Empty
@@ -379,6 +406,17 @@ public sealed partial class RenameVideoViewModel : ObservableObject, IDisposable
     {
         _cancellation?.Dispose();
         _cancellation = null;
+    }
+
+    private static bool TryParseRemoveLeading(string text, out int count)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            count = 0;
+            return true;
+        }
+
+        return int.TryParse(text.Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out count);
     }
 
     private static void TryCancel(CancellationTokenSource? source)

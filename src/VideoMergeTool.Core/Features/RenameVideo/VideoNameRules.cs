@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -5,7 +6,7 @@ namespace VideoMergeTool.Core.Features.RenameVideo;
 
 /// <summary>
 /// Pure naming rules for the bulk renamer: strip the trailing <c>[id]</c> that downloaders such as
-/// yt-dlp append, then append the user's hashtags.
+/// yt-dlp append, optionally drop a number of leading characters, then append the user's hashtags.
 /// </summary>
 public static partial class VideoNameRules
 {
@@ -27,6 +28,26 @@ public static partial class VideoNameRules
         var match = TrailingIdPattern().Match(baseName);
         idFound = match.Success;
         return idFound ? baseName[..match.Index] : baseName;
+    }
+
+    /// <summary>
+    /// Removes the first <paramref name="count"/> characters, then any spaces left at the front.
+    /// Characters are counted as the user sees them, so a letter with combining accents counts once.
+    /// </summary>
+    public static string RemoveLeadingCharacters(string baseName, int count)
+    {
+        if (count <= 0 || baseName.Length == 0)
+        {
+            return baseName;
+        }
+
+        var index = 0;
+        for (var removed = 0; removed < count && index < baseName.Length; removed++)
+        {
+            index += StringInfo.GetNextTextElementLength(baseName, index);
+        }
+
+        return baseName[index..].TrimStart();
     }
 
     /// <summary>
@@ -61,10 +82,12 @@ public static partial class VideoNameRules
     /// change nothing.
     /// </summary>
     /// <param name="normalizedHashtags">Output of <see cref="NormalizeHashtags"/>.</param>
-    public static string ComposeName(string fileName, string normalizedHashtags, out bool idFound)
+    /// <param name="removeLeadingCount">Characters to drop from the start of the name; the extension is never touched.</param>
+    public static string ComposeName(string fileName, string normalizedHashtags, out bool idFound, int removeLeadingCount = 0)
     {
         var extension = Path.GetExtension(fileName);
         var baseName = RemoveTrailingId(Path.GetFileNameWithoutExtension(fileName), out idFound);
+        baseName = RemoveLeadingCharacters(baseName, removeLeadingCount);
 
         if (normalizedHashtags.Length > 0)
         {
@@ -72,7 +95,8 @@ public static partial class VideoNameRules
             baseName = baseName.Length == 0 ? normalizedHashtags : $"{baseName} {normalizedHashtags}";
         }
 
-        // "[id].mp4" with no hashtag would otherwise be renamed to just ".mp4".
+        // "[id].mp4" with no hashtag, or a name shorter than the characters removed, would otherwise
+        // be renamed to just ".mp4".
         return baseName.Length == 0 ? fileName : baseName + extension;
     }
 

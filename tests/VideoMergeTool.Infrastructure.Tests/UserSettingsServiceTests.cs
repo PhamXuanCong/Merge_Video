@@ -44,7 +44,8 @@ public sealed class UserSettingsServiceTests : IDisposable
             ExistingOutputAction = ExistingOutputAction.CreateUniqueName,
             ThemePreference = ThemePreference.Dark,
             RenameFolder = Path.Combine("D:", "downloads"),
-            RenameHashtags = "#trend #fyp"
+            RenameHashtags = "#trend #fyp",
+            RenameRemoveLeadingCount = 5
         };
 
         service.Save(settings);

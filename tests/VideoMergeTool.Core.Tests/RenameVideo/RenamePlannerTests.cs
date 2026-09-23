@@ -51,6 +51,17 @@ public sealed class RenamePlannerTests
         Assert.Equal(string.Empty, plan[1].Note);
     }
 
+    [Fact]
+    public void PlanRemovesLeadingCharactersAndSuffixesTheNamesThatNowClash()
+    {
+        var snapshot = Snapshot(["01 Clip [1].mp4", "02 Clip [2].mp4"]);
+
+        var names = RenamePlanner.Plan(snapshot, "#trend", removeLeadingCount: 3).Select(item => item.NewName).ToList();
+
+        string[] expected = ["Clip #trend.mp4", "Clip #trend (1).mp4"];
+        Assert.Equal(expected, names);
+    }
+
     private static RenameFolderSnapshot Snapshot(string[] videos, string[]? extraEntries = null) =>
         new(@"C:\videos", videos, [.. videos, .. extraEntries ?? []]);
 }

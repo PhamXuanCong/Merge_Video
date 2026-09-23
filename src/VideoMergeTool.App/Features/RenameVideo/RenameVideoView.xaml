@@ -62,20 +62,56 @@
             </Grid>
         </Border>
 
-        <!-- Hashtags -->
+        <!-- Naming rules -->
         <Border Grid.Row="1" Margin="0,12,0,0" Style="{StaticResource SectionCard}">
-            <StackPanel IsEnabled="{Binding IsIdle}">
-                <TextBlock Style="{StaticResource FieldLabel}"
+            <Grid IsEnabled="{Binding IsIdle}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Margin="0,0,12,0"
+                           Style="{StaticResource FieldLabel}"
+                           Text="XOÁ KÝ TỰ ĐẦU TÊN" />
+                <TextBox Grid.Row="1" Grid.Column="0" Width="130" Margin="0,0,12,0"
+                         Style="{StaticResource RoundedTextBox}"
+                         ToolTip="Số ký tự bị xoá tính từ đầu tên file (không tính phần mở rộng). Để trống hoặc 0 nếu không xoá."
+                         Text="{Binding RemoveLeadingText, UpdateSourceTrigger=PropertyChanged}" />
+
+                <TextBlock Grid.Row="0" Grid.Column="1" Style="{StaticResource FieldLabel}"
                            Text="HASHTAG THÊM VÀO CUỐI TÊN  ·  cách nhau bằng dấu cách, ví dụ: #trending #fyp" />
-                <TextBox Style="{StaticResource RoundedTextBox}"
+                <TextBox Grid.Row="1" Grid.Column="1"
+                         Style="{StaticResource RoundedTextBox}"
                          ToolTip="Các ký tự không được dùng trong tên file (\ / : * ? &quot; &lt; &gt; |) sẽ tự bị loại bỏ"
                          Text="{Binding HashtagText, UpdateSourceTrigger=PropertyChanged}" />
-                <TextBlock Margin="0,6,0,0" FontSize="11" TextWrapping="Wrap"
-                           Foreground="{DynamicResource TextSecondary}">
-                    <Run Text="Tên mới = tên gốc bỏ phần [id] ở cuối + hashtag. Chỉ đổi tên các file:" />
-                    <Run Text="{Binding SupportedExtensionsText, Mode=OneTime}" />
-                </TextBlock>
-            </StackPanel>
+
+                <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Margin="0,6,0,0">
+                    <TextBlock FontSize="11" FontWeight="SemiBold" TextWrapping="Wrap"
+                               Foreground="{DynamicResource StatusFailed}"
+                               Text="Số ký tự cần xoá phải là số nguyên không âm — hiện đang không xoá ký tự nào.">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsRemoveLeadingTextValid}" Value="False">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock FontSize="11" TextWrapping="Wrap"
+                               Foreground="{DynamicResource TextSecondary}">
+                        <Run Text="Tên mới = tên gốc bỏ phần [id] ở cuối, bỏ số ký tự đầu đã chọn + hashtag. Chỉ đổi tên các file:" />
+                        <Run Text="{Binding SupportedExtensionsText, Mode=OneTime}" />
+                    </TextBlock>
+                </StackPanel>
+            </Grid>
         </Border>
 
         <!-- Actions -->

@@ -64,6 +64,33 @@ public sealed class VideoNameRulesTests
     }
 
     [Theory]
+    [InlineData("abc_Con mèo [123].mp4", 4, "", "Con mèo.mp4")]
+    [InlineData("01 - Clip [123].mp4", 4, "#trend", "Clip #trend.mp4")]
+    [InlineData("Clip.mp4", 0, "", "Clip.mp4")]
+    [InlineData("Clip.MKV", 2, "", "ip.MKV")]
+    public void ComposeNameRemovesTheRequestedLeadingCharacters(string fileName, int count, string hashtags, string expected)
+    {
+        var result = VideoNameRules.ComposeName(fileName, VideoNameRules.NormalizeHashtags(hashtags), out _, count);
+
+        Assert.Equal(expected, result);
+    }
+
+    [Fact]
+    public void ComposeNameKeepsTheOriginalWhenEveryCharacterWouldBeRemoved()
+    {
+        Assert.Equal("Clip [1].mp4", VideoNameRules.ComposeName("Clip [1].mp4", string.Empty, out _, 10));
+        Assert.Equal("#trend.mp4", VideoNameRules.ComposeName("Clip [1].mp4", "#trend", out _, 10));
+    }
+
+    [Fact]
+    public void RemoveLeadingCharactersCountsACombiningAccentAsPartOfItsLetter()
+    {
+        // "e" followed by a combining circumflex and acute, as some tools save Vietnamese names.
+        Assert.Equal("m", VideoNameRules.RemoveLeadingCharacters("e\u0302\u0301m", 1));
+        Assert.Equal("\U0001F431", VideoNameRules.RemoveLeadingCharacters("\U0001F436\U0001F431", 1));
+    }
+
+    [Theory]
     [InlineData("#trending #fyp", "#trending #fyp")]
     [InlineData("  #trending    #fyp  ", "#trending #fyp")]
     [InlineData("#a\t#b\r\n#c", "#a #b #c")]
